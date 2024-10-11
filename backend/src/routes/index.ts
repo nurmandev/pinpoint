@@ -6,6 +6,7 @@ import post from "./post";
 import comment from "./comment";
 import story from "./story";
 import image from "./image";
+import admin from "./admin"
 
 const router = express.Router();
 
@@ -16,5 +17,6 @@ router.use("/posts", post);
 router.use("/comments", comment);
 router.use("/stories", story);
 router.use("/images", image);
+router.use("/admin", admin);
 
 export default router;
