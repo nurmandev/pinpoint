@@ -7,17 +7,45 @@ import {
   TouchableOpacity,
   Dimensions,
 } from "react-native";
-import React, { useState } from "react";
-import { router } from "expo-router";
-import { Appbar, Menu, useTheme } from "react-native-paper";
-import { Ionicons } from "@expo/vector-icons";
-import Section from "@/src/components/menu/inquiry/Section";
-import Modal from "@/src/components/modals/modal";
+import React, { useEffect, useState } from "react";
+import { router, useLocalSearchParams } from "expo-router";
+import { ActivityIndicator, Appbar, Menu, useTheme } from "react-native-paper";
+import { Ionicons, createIconSetFromFontello } from "@expo/vector-icons";
 import Delete from "@/src/components/menu/inquiry/Delete";
+import { getLeadById } from "@/src/services/lead";
+import { Lead } from "@/src/types/lead";
+import { imageURL } from "@/src/services/api";
+import moment from "moment";
+import LoadingOverlay from "@/src/components/LoadingOverlay";
+import { useToastNotification } from "@/src/context/ToastNotificationContext";
+import { getConversationService } from "@/src/services/message";
+import { useMessage } from "@/src/context/Message";
 
 const Inquiry = () => {
   const { colors } = useTheme();
+  const { addNotification } = useToastNotification();
+  const { setCurrentConversation } = useMessage();
+  const { id } = useLocalSearchParams();
   const [visible, setVisible] = useState(false);
+  const [lead, setLead] = useState<Lead>();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [goingToChat, setGoingToChat] = useState(false);
+
+  useEffect(() => {
+    const fetchLead = async () => {
+      try {
+        if (!id) return;
+        setLoading(true);
+        const response = await getLeadById(id as string);
+        setLead(response.lead);
+        setLoading(false);
+      } catch (error: any) {
+        setError(error.message);
+      }
+    };
+    fetchLead();
+  }, [id]);
 
   const openMenu = () => setVisible(true);
 
@@ -50,6 +78,32 @@ const Inquiry = () => {
       <Delete />
     </Menu>
   );
+
+  const availableOptions = [
+    lead?.service?.homeService && "In-Home Service",
+  ].filter(Boolean);
+
+  const onChat = async () => {
+    try {
+      if (!lead?.conversationId) {
+        addNotification({
+          message: "Unable to start  conversation, try again later",
+          error: true,
+        });
+        return;
+      }
+      setGoingToChat(true);
+      const res = await getConversationService(lead.conversationId);
+      console.log(res);
+      setCurrentConversation(res);
+      router.push("/inquiry/chat");
+    } catch (error: any) {
+      addNotification({ message: error, error: true });
+    } finally {
+      setGoingToChat(false);
+    }
+  };
+
   return (
     <View style={{ flex: 1 }}>
       <Appbar.Header
@@ -59,45 +113,49 @@ const Inquiry = () => {
         <Appbar.Content title="Lead Details" />
         {renderOption()}
       </Appbar.Header>
-      <ScrollView style={{ padding: 15, flex: 1 }}>
+      {loading && <LoadingOverlay />}
+      <ScrollView
+        style={{
+          paddingHorizontal: 15,
+          flex: 1,
+        }}
+      >
         <View style={styles.selectedItem}>
           <Image
-            source={require("../../../../../assets/images/product.png")}
+            source={{ uri: imageURL + lead?.service.images[0] }}
             style={styles.mainImage}
             resizeMode="cover"
           />
         </View>
         <View style={styles.userDetail}>
           <View style={styles.name}>
-            <Text style={styles.fullname}>Location Name</Text>
-            <Text style={styles.username}>Service Name</Text>
+            <Text style={styles.fullname}>{lead?.location.locationName}</Text>
+            <Text style={styles.username}>{lead?.service.name}</Text>
           </View>
-          <TouchableOpacity
-            onPress={() => router.push("/inquiry/chat")}
-            style={{
-              alignItems: "center",
-              padding: 5,
-              paddingHorizontal: 8,
-              borderWidth: 1,
-              borderColor: "#e1e1e1",
-              borderRadius: 40,
-              flexDirection: "row",
-              gap: 10,
-            }}
-          >
-            <Ionicons name="chatbubble-ellipses-outline" size={20} />
-            <Text style={{ fontSize: 16 }}>Chat</Text>
-          </TouchableOpacity>
+          {goingToChat ? (
+            <ActivityIndicator />
+          ) : (
+            <TouchableOpacity
+              onPress={onChat}
+              style={{
+                alignItems: "center",
+                padding: 5,
+                paddingHorizontal: 8,
+                borderWidth: 1,
+                borderColor: "#e1e1e1",
+                borderRadius: 40,
+                flexDirection: "row",
+                gap: 10,
+              }}
+            >
+              <Ionicons name="chatbubble-ellipses-outline" size={20} />
+              <Text style={{ fontSize: 16 }}>Chat</Text>
+            </TouchableOpacity>
+          )}
         </View>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Details</Text>
-          <Text style={styles.sectionText}>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-            eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim
-            ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut
-            aliquip ex ea commodo consequat. Duis aute irure dolor in
-            reprehenderit in voluptate velit esse cillum dolore eu
-          </Text>
+          <Text style={styles.sectionText}>{lead?.service.description}</Text>
 
           <Text
             style={[
@@ -105,60 +163,78 @@ const Inquiry = () => {
               { marginTop: 10, fontWeight: "bold", fontSize: 20 },
             ]}
           >
-            $1500.9
+            {lead?.service?.priceType === "flat"
+              ? `$${lead.service?.price}`
+              : `$${lead?.service?.priceRange?.from} - $${lead?.service?.priceRange?.to}`}
           </Text>
         </View>
-
-        <View style={styles.section}>
+        {availableOptions.length > 0 && (
           <View
-            style={[{ flexDirection: "row", gap: 5, alignItems: "center" }]}
+            style={[
+              styles.section,
+              { flexDirection: "row", gap: 5, alignItems: "center" },
+            ]}
           >
-            <Text style={{}}>Shipping Available</Text>
-            <Ionicons name="checkmark" size={20} />
+            <Text style={{ color: "#888" }}>
+              {availableOptions.join(" + ")}
+            </Text>
+            <Ionicons name="checkmark" size={15} />
           </View>
-          <View
-            style={[{ flexDirection: "row", gap: 5, alignItems: "center" }]}
-          >
-            <Text style={{}}>Pickup</Text>
-            <Ionicons name="checkmark" size={20} />
-          </View>
-        </View>
+        )}
         <View style={styles.section}>
-          <View style={{ flexDirection: "row", marginBottom: 10 }}>
-            <Text style={{ flex: 1 }}>Gender:</Text>
-            <Text style={{ flex: 3 }}>Male</Text>
-          </View>
-          <View style={{ flexDirection: "row" }}>
-            <Text style={{ flex: 1 }}>Color:</Text>
-            <Text style={{ flex: 3 }}>White</Text>
-          </View>
+          {lead?.service?.options?.map((option, index) => (
+            <View
+              key={index}
+              style={{ flexDirection: "row", marginBottom: 10 }}
+            >
+              <Text
+                style={{
+                  flex: 1,
+                  fontWeight: "500",
+                  textTransform: "capitalize",
+                }}
+              >
+                {option.optionCategory}:
+              </Text>
+              <Text style={{ flex: 3 }}>{option.optionName}</Text>
+            </View>
+          ))}
         </View>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Retail</Text>
-          <Text style={styles.sectionText}>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-            eiusmod tempor
-          </Text>
+          <Text style={styles.sectionText}>{lead?.details}</Text>
         </View>
         <View style={styles.section}>
           <Text style={[styles.sectionText, { marginBottom: 8 }]}>
-            07-10-24, 09:00pm
+            {moment(lead?.serviceRequestDate).calendar()}
           </Text>
           <Text style={styles.sectionText}>
             <Text style={styles.sectionTitle}> Urgency:</Text> Important
           </Text>
         </View>
-        <Text
-          onPress={() => router.push("/inquiry/review")}
-          style={{
-            color: colors.primary,
-            fontSize: 12,
-            fontWeight: "500",
-            marginVertical: 20,
-          }}
-        >
-          Leave a review
-        </Text>
+        {lead?.status === "Active" && (
+          <Text
+            onPress={() =>
+              router.push({
+                pathname: "/inquiry/review",
+                params: {
+                  id: lead?.service._id,
+                  image: lead?.service.images[0],
+                  serviceName: lead?.service.name,
+                },
+              })
+            }
+            style={{
+              color: colors.primary,
+              fontSize: 16,
+              fontWeight: "500",
+              marginVertical: 20,
+            }}
+          >
+            Leave a review
+          </Text>
+        )}
+        <View style={{ height: 30, width: 10 }} />
       </ScrollView>
     </View>
   );

@@ -13,133 +13,22 @@ import {
 } from "react-native";
 import Select from "../Select";
 import Rating from "../Rating";
-
-const { width } = Dimensions.get("screen");
-
-const services = [
-  {
-    id: "1",
-    image: require("../../../assets/images/feeds/feed2.png"),
-    name: "Service Name",
-    description: "Service des ription goes here",
-    info: "In-Home Service",
-  },
-  {
-    id: "2",
-    image: require("../../../assets/images/feeds/feed2.png"),
-    name: "Service Name",
-    description: "Service des ription goes here",
-    info: "In-Home Service",
-  },
-  {
-    id: "3",
-    image: require("../../../assets/images/feeds/feed2.png"),
-    name: "Service Name",
-    description: "Service des ription goes here",
-    info: "In-Home Service",
-  },
-  {
-    id: "4",
-    image: require("../../../assets/images/feeds/feed2.png"),
-    name: "Service Name",
-    description: "Service des ription goes here",
-    info: "In-Home Service",
-  },
-  {
-    id: "5",
-    image: require("../../../assets/images/feeds/feed2.png"),
-    name: "Service Name",
-    description: "Service des ription goes here",
-    info: "In-Home Service",
-  },
-  {
-    id: "6",
-    image: require("../../../assets/images/feeds/feed2.png"),
-    name: "Service Name",
-    description: "Service des ription goes here",
-    info: "In-Home Service",
-  },
-  {
-    id: "7",
-    image: require("../../../assets/images/feeds/feed2.png"),
-    name: "Service Name",
-    description: "Service des ription goes here",
-    info: "In-Home Service",
-  },
-  {
-    id: "8",
-    image: require("../../../assets/images/feeds/feed2.png"),
-    name: "Service Name",
-    description: "Service des ription goes here",
-    info: "In-Home Service",
-  },
-];
-
-const products = [
-  {
-    id: "1",
-    image: require("../../../assets/images/product.png"),
-    name: "Product Name",
-    description: "Product description goes here",
-    info: "Buy Online - Shopping",
-  },
-  {
-    id: "2",
-    image: require("../../../assets/images/product.png"),
-    name: "Product Name",
-    description: "Product description goes here",
-    info: "Buy Online - Shopping",
-  },
-  {
-    id: "3",
-    image: require("../../../assets/images/product.png"),
-    name: "Product Name",
-    description: "Product description goes here",
-    info: "Buy Online - Shopping",
-  },
-  {
-    id: "4",
-    image: require("../../../assets/images/product.png"),
-    name: "Product Name",
-    description: "Product description goes here",
-    info: "Buy Online - Shopping",
-  },
-  {
-    id: "5",
-    image: require("../../../assets/images/product.png"),
-    name: "Product Name",
-    description: "Product description goes here",
-    info: "Buy Online - Shopping",
-  },
-  {
-    id: "6",
-    image: require("../../../assets/images/product.png"),
-    name: "Product Name",
-    description: "Product description goes here",
-    info: "Buy Online - Shopping",
-  },
-  {
-    id: "7",
-    image: require("../../../assets/images/product.png"),
-    name: "Product Name",
-    description: "Product description goes here",
-    info: "Buy Online - Shopping",
-  },
-  {
-    id: "8",
-    image: require("../../../assets/images/product.png"),
-    name: "Product Name",
-    description: "Product description goes here",
-    info: "Buy Online - Shopping",
-  },
-];
+import { IService } from "@/src/types/service";
+import { IProduct } from "@/src/types/product";
+import { imageURL } from "@/src/services/api";
+import useDimensions from "@/src/hooks/useDimension";
 
 const options = [
   { label: "Product", value: "product" },
   { label: "Services", value: "services" },
 ];
 
-const Menu = () => {
+interface Props {
+  products: IProduct[];
+  services: IService[];
+}
+const Menu: React.FC<Props> = ({ products, services }) => {
+  const { width } = useDimensions();
   const [search, setSearch] = useState("");
   const [selectedValue, setSelectedValue] = useState("product");
 
@@ -147,30 +36,56 @@ const Menu = () => {
     setSelectedValue(value as string);
   };
 
-  const renderItem = ({ item }: any) => (
-    <View style={styles.userContainer}>
-      <Image source={item.image} style={styles.profileImage} />
-      <View style={styles.userInfo}>
-        <Text style={styles.userName}>{item.name}</Text>
-        <Text style={styles.description}>{item.description}</Text>
-        <Rating rating={5} show={false} />
-        <Text style={styles.description}>
-          {item.info}
-          <Ionicons name="chevron-down" size={12} />
-        </Text>
-      </View>
-      <View style={{ alignItems: "flex-end" }}>
-        <Text style={[styles.userName, { marginBottom: 20 }]}>$10.99</Text>
-        <TouchableOpacity style={[styles.button]}>
+  const renderItem = ({ item }: any) => {
+    const availableOptions = [
+      item.availableOnline && "Buy Online",
+      item.ships && "Shipping",
+      item.homeService && "In-Home Service",
+    ].filter(Boolean);
+    return (
+      <View style={styles.userContainer}>
+        <Image
+          source={{ uri: imageURL + item.images[0] }}
+          style={styles.profileImage}
+        />
+        <View style={styles.userInfo}>
+          <Text style={styles.userName}>{item.name}</Text>
           <Text
-            style={[styles.buttonText, item.following && styles.followingText]}
+            style={[styles.description, { maxWidth: width * 0.45 }]}
+            numberOfLines={1}
           >
-            Pinpoint
+            {item.description}
           </Text>
-        </TouchableOpacity>
+          <Rating rating={item.rating} show={false} />
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+            <Text style={{ color: "#888" }}>
+              {availableOptions.join(" + ")}
+            </Text>
+            {availableOptions.length > 0 && (
+              <Ionicons name="checkmark" size={15} />
+            )}
+          </View>
+        </View>
+        <View style={{ alignItems: "flex-end" }}>
+          <Text style={[styles.userName, { marginBottom: 20 }]}>
+            {item.priceType === "range"
+              ? `$${item?.priceRange?.from} - $${item?.priceRange?.to}`
+              : `$${item.price}`}
+          </Text>
+          <TouchableOpacity style={[styles.button]}>
+            <Text
+              style={[
+                styles.buttonText,
+                item.following && styles.followingText,
+              ]}
+            >
+              Pinpoint
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
-  );
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -180,9 +95,21 @@ const Menu = () => {
         selectedValue={selectedValue}
         containerStyle={{ width: "40%", marginBottom: 20 }}
       />
-      {(selectedValue === "product" ? products : services).map((item) => (
-        <View key={item.id}>{renderItem({ item })}</View>
-      ))}
+      {selectedValue === "product" ? (
+        products.length <= 0 ? (
+          <Text>No Product Available</Text>
+        ) : (
+          products.map((item) => (
+            <View key={item._id}>{renderItem({ item })}</View>
+          ))
+        )
+      ) : services.length <= 0 ? (
+        <Text>No Service Available</Text>
+      ) : (
+        services.map((item) => (
+          <View key={item._id}>{renderItem({ item })}</View>
+        ))
+      )}
     </View>
   );
 };

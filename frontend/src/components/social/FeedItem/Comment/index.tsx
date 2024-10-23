@@ -19,6 +19,8 @@ import {
 } from "@gorhom/bottom-sheet";
 import { useUser } from "@/src/context/User";
 import { Comment as IComment } from "@/src/types/comment";
+import { useToastNotification } from "@/src/context/ToastNotificationContext";
+import { imageURL } from "@/src/services/api";
 
 interface Props {
   handleSendComment: (value: string) => Promise<void>;
@@ -35,9 +37,11 @@ const CommentModal: React.FC<Props> = ({
   handleSendReply,
 }) => {
   const { user } = useUser();
+  const { addNotification } = useToastNotification();
   const bottomSheetRef = useRef<BottomSheetModal>(null);
   const [content, setContent] = useState("");
   const [isReplying, setIsReplying] = useState<IComment | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const openSheet = () => {
     if (bottomSheetRef) {
@@ -46,17 +50,29 @@ const CommentModal: React.FC<Props> = ({
   };
 
   const sendCommet = async () => {
-    if (content.trim() !== "") {
+    if (content.trim() === "") return;
+    try {
+      setLoading(true);
       await handleSendComment(content);
       setContent("");
+    } catch (error: any) {
+      addNotification({ message: error, error: true });
+    } finally {
+      setLoading(false);
     }
   };
 
   const sendReply = async () => {
-    if (content.trim() !== "") {
+    if (content.trim() === "") return;
+    try {
+      setLoading(true);
       await handleSendReply(content, isReplying!._id);
       setContent("");
       setIsReplying(null);
+    } catch (error: any) {
+      addNotification({ message: error, error: true });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -120,7 +136,10 @@ const CommentModal: React.FC<Props> = ({
               </View>
             ) : null}
             <View style={styles.inputContainer}>
-              <Image source={{ uri: user?.avatarUrl }} style={styles.avatar} />
+              <Image
+                source={{ uri: imageURL + user?.avatarUrl }}
+                style={styles.avatar}
+              />
               <View style={styles.inputCont}>
                 <TextInput
                   style={styles.input}
@@ -132,6 +151,7 @@ const CommentModal: React.FC<Props> = ({
                 <TouchableOpacity
                   style={styles.sendButton}
                   onPress={isReplying ? sendReply : sendCommet}
+                  disabled={loading}
                 >
                   <Ionicons name="send" size={24} color="gray" />
                 </TouchableOpacity>

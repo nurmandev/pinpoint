@@ -6,6 +6,7 @@ import {
   ImageBackground,
   Image,
   Platform,
+  Pressable,
 } from "react-native";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Ionicons, AntDesign } from "@expo/vector-icons";
@@ -27,6 +28,7 @@ import {
 } from "@/src/services/comment";
 import { Comment as IComment } from "@/src/types/comment";
 import { imageURL } from "@/src/services/api";
+import useDimensions from "@/src/hooks/useDimension";
 
 interface Props {
   item: Post;
@@ -35,6 +37,7 @@ interface Props {
 const FeedItem: React.FC<Props> = ({ item }) => {
   const { likeExistingPost } = usePost();
   const { user } = useUser();
+  const { width } = useDimensions();
   const video = useRef<Video>(null);
   const [status, setStatus] = useState<any>({});
   const [visible, setVisible] = useState(false);
@@ -108,15 +111,23 @@ const FeedItem: React.FC<Props> = ({ item }) => {
       <Image
         source={{
           uri:
-            imageURL + item.location
-              ? item?.location?.images[0]
-              : item.userId.avatarUrl,
+            imageURL +
+            (item.location ? item?.location?.images[0] : item.userId.avatarUrl),
         }}
         style={styles.userAvatar}
       />
-      <View style={styles.userDetails}>
+      <Pressable
+        onPress={() =>
+          item.location
+            ? router.push({
+                pathname: "/location",
+                params: { id: item.location._id },
+              })
+            : null
+        }
+        style={styles.userDetails}
+      >
         <Text
-          onPress={() => (item.location ? router.push("/location") : null)}
           style={[
             styles.username,
             item.media && item.media?.length < 1 && { color: "black" },
@@ -125,9 +136,14 @@ const FeedItem: React.FC<Props> = ({ item }) => {
           {item.location ? item?.location?.locationName : item.userId.username}
         </Text>
         {item.location ? (
-          <Text style={styles.location}>{item?.location?.address}</Text>
+          <Text
+            numberOfLines={2}
+            style={[styles.location, { width: width * 0.55 }]}
+          >
+            {item?.location?.address}
+          </Text>
         ) : null}
-      </View>
+      </Pressable>
 
       <Menu
         visible={visible}

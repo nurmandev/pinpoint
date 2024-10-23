@@ -46,6 +46,16 @@ export const getPosts = async () => {
   }
 };
 
+export const fetchPostsByLocation = async (locationId: string) => {
+  try {
+    const response = await axiosInstance.get(`/posts/location/${locationId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching posts for location:", error);
+    throw error;
+  }
+};
+
 // Get a post by ID
 export const getPostById = async (id: string) => {
   try {

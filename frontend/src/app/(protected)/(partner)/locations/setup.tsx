@@ -22,6 +22,9 @@ import useDimensions from "@/src/hooks/useDimension";
 import { useLocation } from "@/src/context/Location";
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
+import BottomSheetComponent from "@/src/components/BottomSheetComponent";
+import LocationSelector from "@/src/components/LocationSelector";
+import { useToastNotification } from "@/src/context/ToastNotificationContext";
 
 const categoriesOption = [
   { label: "Clothing", value: "clothing" },
@@ -31,6 +34,7 @@ const Location = () => {
   const { colors } = useTheme();
   const { createNewLocation } = useLocation();
   const { isMobile } = useDimensions();
+  const { addNotification } = useToastNotification();
   const [menuText, setMenuText] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -45,6 +49,10 @@ const Location = () => {
     poll: {
       question: "", // Poll question
       options: ["", "", ""] as string[], // Poll options as an array of strings
+    },
+    coordinates: {
+      latitude: 0,
+      longitude: 0,
     },
     hoursOfOperation: [] as { day: string; open: string; close: string }[],
     errors: {
@@ -187,6 +195,7 @@ const Location = () => {
     try {
       setLoading(true);
       setError(null);
+
       await createNewLocation({
         locationName: formData.locationName,
         address: formData.address,
@@ -196,10 +205,15 @@ const Location = () => {
         hoursOfOperation: formData.hoursOfOperation,
         menu: formData.menu,
         poll: formData.poll,
+        coordinates: formData.coordinates,
+      });
+      addNotification({
+        message: "Location Created Successfully",
       });
       router.back();
     } catch (error: any) {
-      setError(error.message);
+      console.log("error", error);
+      addNotification({ message: error, error: true });
     } finally {
       setLoading(false);
     }
@@ -305,14 +319,38 @@ const Location = () => {
               </Text>
             )}
 
-            <TextInput
-              mode="outlined"
-              label="Address"
-              value={formData.address}
-              onChangeText={(text) => handleChange("address", text)}
-              style={styles.input}
+            <BottomSheetComponent
+              button={
+                <View
+                  style={[
+                    styles.input,
+                    {
+                      borderWidth: 1,
+                      borderRadius: 5,
+                      padding: 10,
+                      justifyContent: "center",
+                    },
+                  ]}
+                >
+                  <Text style={{ fontSize: 16 }}>
+                    {formData.address || "Address"}
+                  </Text>
+                </View>
+              }
+              content={(close) => (
+                <LocationSelector
+                  onLocationSelect={(location) => {
+                    console.log(location);
+                    handleChange("address", location.description);
+                    handleChange("coordinates", {
+                      latitude: location.coordinates.lat,
+                      longitude: location.coordinates.lng,
+                    });
+                  }}
+                  close={close}
+                />
+              )}
             />
-
             {formData.errors.address && (
               <Text style={styles.errorText}>{formData.errors.address}</Text>
             )}
@@ -326,7 +364,6 @@ const Location = () => {
               numberOfLines={3}
               maxLength={100}
             />
-
             {formData.errors.description && (
               <Text style={styles.errorText}>
                 {formData.errors.description}

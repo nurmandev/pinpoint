@@ -51,8 +51,14 @@ const Social = () => {
           />
         </Menu>
         <Appbar.Action icon="magnify" onPress={() => {}} />
-        <Appbar.Action icon="bell-outline" onPress={() => {}} />
-        <Appbar.Action icon="email-outline" onPress={() => {}} />
+        <Appbar.Action
+          icon="bell-outline"
+          onPress={() => router.push("notification")}
+        />
+        <Appbar.Action
+          icon="email-outline"
+          onPress={() => router.push("/message")}
+        />
       </Appbar.Header>
       <SafeAreaView style={styles.container}>
         <FlatList

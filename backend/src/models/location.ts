@@ -1,8 +1,25 @@
 import { Schema, model, Document } from "mongoose";
 
+export interface IReview {
+  userId: Schema.Types.ObjectId;
+  content: string;
+  rating: number;
+  image?: string;
+}
+
+const ReviewSchema: Schema<IReview> = new Schema(
+  {
+    userId: { type: Schema.Types.ObjectId, ref: "User" },
+    content: { type: String, required: true },
+    rating: { type: Number, required: true },
+    image: { type: String },
+  },
+  { timestamps: true }
+);
+
 // Define the LocationDocument Schema
-interface LocationDocument extends Document {
-  partnerId: Schema.Types.ObjectId; // Reference to the Partner
+export interface LocationDocument extends Document {
+  partnerId: Schema.Types.ObjectId;
   locationName: string;
   images: string[];
   address: string;
@@ -14,19 +31,19 @@ interface LocationDocument extends Document {
     openTime: string;
     closeTime: string;
   }[];
-  // menu: {
-  //   category: string;
-  //   items: string[];
-  // }[];
   menu: string[];
   poll?: {
     question: string;
     options: string[];
   };
   coordinates: {
-    latitude: number;
-    longitude: number;
+    type: string;
+    coordinates: [number, number]; // [longitude, latitude]
   };
+  rating: 0;
+  reviews: IReview[];
+  followers: Schema.Types.ObjectId[];
+  likes: Schema.Types.ObjectId[];
 }
 
 // Mongoose Schema Definition
@@ -52,7 +69,6 @@ const locationSchema = new Schema<LocationDocument>(
     },
     categories: {
       type: [String],
-      // required: true,
     },
     hoursOfOperation: [
       {
@@ -62,24 +78,33 @@ const locationSchema = new Schema<LocationDocument>(
         openTime: { type: String, required: true },
       },
     ],
-    // menu: [
-    //   {
-    //     category: { type: String, required: true },
-    //     items: [{ type: String, required: true }],
-    //   },
-    // ],
     menu: [{ type: String }],
     poll: {
       question: { type: String },
       options: [{ type: String }],
     },
     coordinates: {
-      latitude: { type: Number },
-      longitude: { type: Number },
+      type: {
+        type: String,
+        enum: ["Point"], // GeoJSON object type
+        required: true,
+        default: "Point",
+      },
+      coordinates: {
+        type: [Number], // Array of numbers: [longitude, latitude]
+        required: true,
+      },
     },
+    reviews: { type: [ReviewSchema] },
+    rating: { type: Number, default: 0 },
+    followers: [{ type: Schema.Types.ObjectId, ref: "User" }],
+    likes: [{ type: Schema.Types.ObjectId, ref: "User" }],
   },
   { timestamps: true }
 );
+
+// Create a 2dsphere index on the coordinates field
+locationSchema.index({ coordinates: "2dsphere" });
 
 // Create and export the model
 const Location = model<LocationDocument>("Location", locationSchema);

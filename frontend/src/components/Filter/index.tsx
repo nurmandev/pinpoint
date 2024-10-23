@@ -15,36 +15,73 @@ import SliderLabel from "./SliderLabel";
 
 const WIDTH = Dimensions.get("screen").width;
 
-const Filter: React.FC = () => {
+interface FilterProps {
+  isOnlineShopping?: boolean;
+  setIsOnlineShopping: (value?: boolean) => void;
+  inShopOnly?: boolean;
+  selectedItem: string;
+  setInShopOnly: (value?: boolean) => void;
+  options: any;
+  setOptions: (options: any) => void;
+  count: number;
+  close: () => void;
+}
+
+const Filter: React.FC<FilterProps> = ({
+  isOnlineShopping,
+  setIsOnlineShopping,
+  inShopOnly,
+  setInShopOnly,
+  selectedItem,
+  options,
+  setOptions,
+  count,
+  close,
+}) => {
   const { colors } = useTheme();
   const [distance, setDistance] = useState(14);
   const [priceRange, setPriceRange] = useState([10, 50]);
-  const [isOnlineShopping, setIsOnlineShopping] = useState(true);
-  const [selectedGenders, setSelectedGenders] = useState<string[]>(["Male"]);
-  const [selectedColors, setSelectedColors] = useState<string[]>(["White"]);
+  const [selectedGenders, setSelectedGenders] = useState<string[]>(
+    options.gender ? [options.gender] : []
+  );
+  const [selectedColors, setSelectedColors] = useState<string[]>(
+    options.color ? [options.color] : []
+  );
   const [showGender, setShowGender] = useState(true);
   const [showColor, setShowColor] = useState(true);
-
   const toggleGender = (gender: string) => {
-    setSelectedGenders((prev) =>
-      prev.includes(gender)
-        ? prev.filter((g) => g !== gender)
-        : [...prev, gender]
-    );
+    const updatedGenders = selectedGenders.includes(gender)
+      ? selectedGenders.filter((g) => g !== gender)
+      : [...selectedGenders, gender];
+
+    setSelectedGenders(updatedGenders);
+
+    setOptions({
+      ...options,
+      gender: updatedGenders.length > 0 ? updatedGenders.join(", ") : undefined,
+    });
   };
 
   const toggleColor = (color: string) => {
-    setSelectedColors((prev) =>
-      prev.includes(color) ? prev.filter((c) => c !== color) : [...prev, color]
-    );
+    const updatedColors = selectedColors.includes(color)
+      ? selectedColors.filter((c) => c !== color)
+      : [...selectedColors, color];
+    setSelectedColors(updatedColors);
+
+    setOptions({
+      ...options,
+      color: updatedColors.length > 0 ? updatedColors.join(", ") : undefined,
+    });
   };
 
   const clearAllFilters = () => {
     setDistance(14);
     setPriceRange([10, 50]);
-    setIsOnlineShopping(true);
-    setSelectedGenders(["Male"]);
-    setSelectedColors(["White"]);
+    setIsOnlineShopping();
+    setInShopOnly();
+    setSelectedGenders([]);
+    setSelectedColors([]);
+    setOptions({});
   };
 
   return (
@@ -157,38 +194,68 @@ const Filter: React.FC = () => {
           />
         </View>
 
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-            borderBottomColor: "#e1e1e1",
-            borderBottomWidth: 1,
-            paddingVertical: 15,
-          }}
-        >
-          <Text style={{ fontWeight: "500", marginRight: 8 }}>
-            In-Store Shopping
-          </Text>
-          <Checkbox.Android status="checked" />
-        </View>
+        {selectedItem === "Products" && (
+          <>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                borderBottomColor: "#e1e1e1",
+                borderBottomWidth: 1,
+                paddingVertical: 15,
+              }}
+            >
+              <Text style={{ fontWeight: "500", marginRight: 8 }}>
+                In-Store Shopping
+              </Text>
+              <Checkbox.Android
+                status={isOnlineShopping ? "checked" : "unchecked"}
+                onPress={() => setIsOnlineShopping(!isOnlineShopping)}
+              />
+            </View>
 
-        {/* Online Shopping */}
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-            borderBottomColor: "#e1e1e1",
-            borderBottomWidth: 1,
-            paddingVertical: 15,
-          }}
-        >
-          <Text style={{ fontWeight: "500", marginRight: 8 }}>
-            Online Shopping
-          </Text>
-          <Checkbox.Android status="checked" />
-        </View>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                borderBottomColor: "#e1e1e1",
+                borderBottomWidth: 1,
+                paddingVertical: 15,
+              }}
+            >
+              <Text style={{ fontWeight: "500", marginRight: 8 }}>
+                Online Shopping
+              </Text>
+              <Checkbox.Android
+                status={inShopOnly ? "checked" : "unchecked"}
+                onPress={() => setInShopOnly(!inShopOnly)}
+              />
+            </View>
+          </>
+        )}
+
+        {selectedItem === "Services" && (
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              borderBottomColor: "#e1e1e1",
+              borderBottomWidth: 1,
+              paddingVertical: 15,
+            }}
+          >
+            <Text style={{ fontWeight: "500", marginRight: 8 }}>
+              In-Home Service
+            </Text>
+            <Checkbox.Android
+              status={isOnlineShopping ? "checked" : "unchecked"}
+              onPress={() => setIsOnlineShopping(!isOnlineShopping)}
+            />
+          </View>
+        )}
 
         {/* Gender */}
         <View
@@ -310,7 +377,9 @@ const Filter: React.FC = () => {
           )}
         </View>
       </ScrollView>
-      <Button>Show Result(1500) Products</Button>
+      <Button onPress={close}>
+        <Text style={{ color: "white" }}>Show Result({count}) Products</Text>
+      </Button>
     </View>
   );
 };

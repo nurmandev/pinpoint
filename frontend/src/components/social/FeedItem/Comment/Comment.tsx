@@ -11,6 +11,7 @@ import Reply from "./Reply";
 import { Comment as IComment } from "@/src/types/comment";
 import { AntDesign, Ionicons } from "@expo/vector-icons";
 import moment from "moment";
+import { imageURL } from "@/src/services/api";
 
 const Comment: React.FC<{
   comment: IComment;
@@ -21,7 +22,10 @@ const Comment: React.FC<{
 
   return (
     <View style={styles.commentContainer}>
-      <Image source={{ uri: comment.userId.avatarUrl }} style={styles.avatar} />
+      <Image
+        source={{ uri: imageURL + comment.userId.avatarUrl }}
+        style={styles.avatar}
+      />
       <View style={styles.commentContent}>
         <Text style={styles.username}>{comment.userId.username}</Text>
         <Text style={styles.content}>{comment.content}</Text>

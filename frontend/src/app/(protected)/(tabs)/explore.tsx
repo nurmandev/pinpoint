@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   StyleSheet,
   View,
@@ -23,19 +23,104 @@ import {
   serviceOptions,
   services,
 } from "@/src/utils/data/explore";
-import { Product } from "@/src/types/product";
+import { IProduct, Product } from "@/src/types/product";
 import Rating from "@/src/components/Rating";
+import { useProduct } from "@/src/context/Product";
+import { useService } from "@/src/context/Service";
+import { IService } from "@/src/types/service";
+import { imageURL } from "@/src/services/api";
+import CustomFlatList from "@/src/components/CustomFlatList";
 
 const Discover = () => {
   const { colors } = useTheme();
+  const { fetchProducts } = useProduct();
+  const { fetchServices } = useService();
+  const [products, setProducts] = useState<IProduct[]>([]);
+  const [services, setServices] = useState<IService[]>([]);
   const [selectedItem, setSelectedItem] = useState("Products");
-  const [selectedTypeValues, setSelectedTypeValues] = useState<
-    (string | number)[]
-  >([]);
-  const [selectedDetailValues, setSelectedDetailValues] = useState<
-    (string | number)[]
-  >([]);
+  const [selectedTypeValues, setSelectedTypeValues] = useState<string[]>([]);
+  const [selectedDetailValues, setSelectedDetailValues] = useState<string[]>(
+    []
+  );
   const [isSelected, setIsSelected] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [search, setSearch] = useState("");
+  const [inShopOnly, setInShopOnly] = useState<boolean>();
+  const [availableOnline, setAvailableOnline] = useState<boolean>();
+  const [options, setOptions] = useState<{ [key: string]: string }>({});
+  const [debouncedSearch, setDebouncedSearch] = useState(search); // New state for debounced search
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 500); // 500ms delay
+
+    return () => {
+      clearTimeout(handler); // Clear timeout if the effect is re-run
+    };
+  }, [search]);
+
+  useEffect(() => {
+    const getServices = async () => {
+      try {
+        setLoading(true);
+        const result = await fetchServices({
+          page,
+          limit,
+          search: debouncedSearch,
+          category: selectedTypeValues.length > 0 ? selectedTypeValues : [],
+          subCategory:
+            selectedDetailValues.length > 0 ? selectedDetailValues : [],
+          inShopOnly,
+          availableOnline,
+          options,
+        });
+        setServices(result);
+      } catch (error: any) {
+        setError(error as string);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const getProducts = async () => {
+      try {
+        setLoading(true);
+        const result = await fetchProducts({
+          page,
+          limit,
+          search: debouncedSearch,
+          category: selectedTypeValues.length > 0 ? selectedTypeValues : [],
+          subCategory:
+            selectedDetailValues.length > 0 ? selectedDetailValues : [],
+          inShopOnly,
+          availableOnline,
+          options,
+        });
+        setProducts(result);
+      } catch (error: any) {
+        setError(error as string);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    getServices();
+    getProducts();
+  }, [
+    page,
+    limit,
+    debouncedSearch,
+    selectedTypeValues,
+    selectedDetailValues,
+    inShopOnly,
+    availableOnline,
+    options,
+  ]);
 
   const getOptions = () => {
     if (selectedItem === "Products") return productOptions;
@@ -51,106 +136,90 @@ const Discover = () => {
     }
   };
 
-  const renderHeader = () => {
-    const options = getOptions();
+  const selectedOptions = getOptions();
 
-    // Get the detail options based on the first selected type
-    const selectedTypeOptions = options
-      .filter((option) => selectedTypeValues.includes(option.value))
-      .flatMap((option) => option.detailOptions);
+  const selectedTypeOptions = selectedOptions
+    .filter((option) => selectedTypeValues.includes(option.value))
+    .flatMap((option) => option.detailOptions);
 
-    return (
-      <View style={styles.headerContainer}>
-        <Text style={styles.headerTitle}>What are you looking for?</Text>
-        <View style={styles.buttonGroup}>
-          <ItemButton
-            label="Services"
-            icon={
-              <Ionicons
-                name="person-outline"
-                size={24}
-                color={getColor("Services")}
-              />
-            }
-            selected={selectedItem === "Services"}
-            onPress={() => {
-              setSelectedItem("Services");
-              setSelectedTypeValues([]);
-            }}
-          />
-          <ItemButton
-            label="Products"
-            icon={<Feather name="box" size={24} color={getColor("Products")} />}
-            selected={selectedItem === "Products"}
-            onPress={() => {
-              setSelectedItem("Products");
-              setSelectedTypeValues([]);
-            }}
-          />
-        </View>
+  const getColor = (item: string) =>
+    selectedItem === item ? colors.primary : "black";
 
-        <TextInput
-          mode="outlined"
-          placeholder="Search Categories"
-          left={<TextInput.Icon icon="magnify" />}
-          outlineStyle={{ borderRadius: 10, borderColor: "#e1e1e1e1" }}
-          style={{ height: 50, marginVertical: 20 }}
+  const renderHeader = (
+    <View style={styles.headerContainer}>
+      <Text style={styles.headerTitle}>What are you looking for?</Text>
+      <View style={styles.buttonGroup}>
+        <ItemButton
+          label="Services"
+          icon={
+            <Ionicons
+              name="person-outline"
+              size={24}
+              color={getColor("Services")}
+            />
+          }
+          selected={selectedItem === "Services"}
+          onPress={() => {
+            setSelectedItem("Services");
+            setSelectedTypeValues([]);
+          }}
         />
-        <View style={styles.selectGroup}>
-          <MultiSelect
-            placeholder="Select type..."
-            modalTitle={
-              selectedItem === "Products"
-                ? "Product Categories"
-                : "Service Categories"
-            }
-            selectedValues={selectedTypeValues}
-            onValuesChange={(values) => setSelectedTypeValues(values)}
-            options={options.map((option) => ({
-              label: option.label,
-              value: option.value,
-            }))}
-            containerStyle={styles.selectContainer}
-          />
-          <MultiSelect
-            placeholder="Select details..."
-            modalTitle={
-              (selectedTypeValues as unknown as string) + " Subcategories"
-            }
-            selectedValues={selectedDetailValues}
-            onValuesChange={(values) => setSelectedDetailValues(values)}
-            options={selectedTypeOptions}
-            containerStyle={styles.selectContainer}
-          />
-        </View>
+        <ItemButton
+          label="Products"
+          icon={<Feather name="box" size={24} color={getColor("Products")} />}
+          selected={selectedItem === "Products"}
+          onPress={() => {
+            setSelectedItem("Products");
+            setSelectedTypeValues([]);
+          }}
+        />
       </View>
-    );
-  };
+    </View>
+  );
 
-  const RenderItem = ({ item }: { item: Product }) => {
+  const RenderItem = ({ item }: { item: IProduct & IService }) => {
+    const availableOptions = [
+      item.availableOnline && "Buy Online",
+      item.ships && "Shipping",
+      item.homeService && "In-Home Service",
+    ].filter(Boolean);
     return (
       <TouchableOpacity
         onPress={() =>
-          router.push(
-            selectedItem === "Products" ? "/product-detail" : "/service-detail"
-          )
+          router.push({
+            pathname:
+              selectedItem === "Products"
+                ? "/product-detail"
+                : "/service-detail",
+            params: { id: item._id },
+          })
         }
         style={styles.card}
       >
-        <Image source={item.image} style={styles.image} />
+        <Image
+          source={{ uri: imageURL + item.images[0] }}
+          style={styles.image}
+        />
         <Text style={styles.name}>{item.name}</Text>
-        <Text style={styles.price}>{item.price}</Text>
-        <View style={{ marginBottom: 5 }}>
-          <Rating rating={5} textStyle={{ color: "black" }} />
-        </View>
-        <Text
-          style={{ flexDirection: "row", alignItems: "center", color: "#888" }}
-        >
-          {item.options} <Ionicons name="checkmark" size={12} />
+        <Text style={styles.price}>
+          {selectedItem === "Products"
+            ? `$${item.price}`
+            : item.priceType === "flat"
+            ? `$${item.price}`
+            : `$${item.priceRange?.from} - $${item.priceRange?.to}`}
         </Text>
+        <View style={{ marginBottom: 5 }}>
+          <Rating rating={item.rating} textStyle={{ color: "black" }} />
+        </View>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+          <Text style={{ color: "#888" }}>{availableOptions.join(" + ")}</Text>
+          {availableOptions.length > 0 && (
+            <Ionicons name="checkmark" size={15} />
+          )}
+        </View>
         {selectedItem === "Services" && (
           <TouchableOpacity
-            onPress={() => handleSelect(item.id)}
+            onPress={() => handleSelect(item._id)}
             style={{
               width: 50,
               height: 50,
@@ -167,7 +236,7 @@ const Discover = () => {
                 height: 20,
                 borderWidth: 2,
                 borderRadius: 20,
-                backgroundColor: isSelected.includes(item.id)
+                backgroundColor: isSelected.includes(item._id)
                   ? colors.primary
                   : "transparent",
                 borderColor: isSelected ? colors.primary : "gray",
@@ -175,7 +244,7 @@ const Discover = () => {
                 alignItems: "center",
               }}
             >
-              {isSelected.includes(item.id) && (
+              {isSelected.includes(item._id) && (
                 <Ionicons name="checkmark" color={"white"} size={14} />
               )}
             </View>
@@ -185,19 +254,66 @@ const Discover = () => {
     );
   };
 
-  const getColor = (item: string) =>
-    selectedItem === item ? colors.primary : "black";
-
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar style="dark" />
-      <FlatList
+      <CustomFlatList
         data={selectedItem === "Products" ? products : services}
+        style={styles.list}
         renderItem={({ item }) => <RenderItem item={item} />}
-        keyExtractor={(item) => item.id}
-        numColumns={2}
-        ListHeaderComponent={renderHeader}
-        contentContainerStyle={styles.productGrid}
+        HeaderComponent={renderHeader}
+        StickyElementComponent={
+          <View
+            style={{
+              paddingTop: 20,
+              paddingBottom: 10,
+              backgroundColor: "white",
+            }}
+          >
+            <TextInput
+              mode="outlined"
+              placeholder="Search Categories"
+              left={<TextInput.Icon icon="magnify" />}
+              value={search}
+              onChangeText={(text) => setSearch(text)}
+              outlineStyle={{ borderRadius: 10, borderColor: "#e1e1e1e1" }}
+              style={{ height: 50 }}
+            />
+          </View>
+        }
+        TopListElementComponent={
+          <View style={styles.selectGroup}>
+            <MultiSelect
+              placeholder="Select type..."
+              modalTitle={
+                selectedItem === "Products"
+                  ? "Product Categories"
+                  : "Service Categories"
+              }
+              selectedValues={selectedTypeValues}
+              onValuesChange={(values) =>
+                setSelectedTypeValues(values as string[])
+              }
+              options={selectedOptions.map((option) => ({
+                label: option.label,
+                value: option.value,
+              }))}
+              containerStyle={styles.selectContainer}
+            />
+            <MultiSelect
+              placeholder="Select details..."
+              modalTitle={
+                (selectedTypeValues as unknown as string) + " Subcategories"
+              }
+              selectedValues={selectedDetailValues}
+              onValuesChange={(values) =>
+                setSelectedDetailValues(values as string[])
+              }
+              options={selectedTypeOptions}
+              containerStyle={styles.selectContainer}
+            />
+          </View>
+        }
       />
       {isSelected.length > 0 && (
         <Button
@@ -211,7 +327,21 @@ const Discover = () => {
         </Button>
       )}
       <BottomSheetComponent
-        content={<Filter />}
+        content={(close) => (
+          <Filter
+            close={close}
+            options={options}
+            setIsOnlineShopping={setAvailableOnline}
+            setOptions={setOptions}
+            isOnlineShopping={availableOnline}
+            selectedItem={selectedItem}
+            count={
+              selectedItem === "Products" ? products.length : services.length
+            }
+            setInShopOnly={setInShopOnly}
+            inShopOnly={inShopOnly}
+          />
+        )}
         button={
           <Surface
             style={[
@@ -272,9 +402,10 @@ export default Discover;
 const WIDTH = Dimensions.get("screen").width;
 const styles = StyleSheet.create({
   container: {
-    margin: 15,
+    marginHorizontal: 15,
     flex: 1,
   },
+  list: { overflow: "hidden", gap: 25, flex: 1 },
   productGrid: {
     paddingBottom: 15,
     gap: 25,
@@ -305,6 +436,7 @@ const styles = StyleSheet.create({
   selectGroup: {
     marginBottom: 30,
     gap: 10,
+    marginTop: 10,
   },
   selectContainer: {
     backgroundColor: "white",
@@ -313,6 +445,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     width: WIDTH / 2 - 22.5,
     marginRight: 15,
+    marginBottom: 10,
   },
   image: {
     width: "100%",

@@ -1,21 +1,19 @@
 import useDimensions from "@/src/hooks/useDimension";
-import React, { useState, ReactNode } from "react";
+import { Ionicons } from "@expo/vector-icons";
+import React, { useState, ReactNode, ReactElement } from "react";
 import {
   Modal as DefaultModal,
   View,
-  Text,
   TouchableOpacity,
-  FlatList,
   StyleSheet,
   StyleProp,
   ViewStyle,
   TextStyle,
-  Image,
   ScrollView,
 } from "react-native";
 
 type CustomModalProps = {
-  children: ReactNode;
+  children: (onClose: () => void) => ReactNode; // Passing onClose to children
   button: ReactNode;
   buttonStyle?: StyleProp<TextStyle>;
   modalStyle?: StyleProp<ViewStyle>;
@@ -30,6 +28,8 @@ const Modal: React.FC<CustomModalProps> = ({
   const [isModalVisible, setIsModalVisible] = useState(false);
   const { isMobile } = useDimensions();
 
+  const handleClose = () => setIsModalVisible(false);
+
   return (
     <>
       <TouchableOpacity
@@ -43,12 +43,12 @@ const Modal: React.FC<CustomModalProps> = ({
         transparent
         visible={isModalVisible}
         animationType="fade"
-        onRequestClose={() => setIsModalVisible(false)}
+        onRequestClose={handleClose}
       >
         <TouchableOpacity
           style={styles.modalOverlay}
           activeOpacity={1}
-          onPressOut={() => setIsModalVisible(false)}
+          // onPressOut={handleClose}
         >
           <View
             style={[
@@ -57,9 +57,15 @@ const Modal: React.FC<CustomModalProps> = ({
               modalStyle,
             ]}
           >
-            <ScrollView showsVerticalScrollIndicator={false}>
-              {children}
-            </ScrollView>
+            <Ionicons
+              name="close"
+              size={20}
+              style={styles.close}
+              onPress={handleClose}
+            />
+            {/* <ScrollView showsVerticalScrollIndicator={false}> */}
+            {children(handleClose)}
+            {/* </ScrollView> */}
           </View>
         </TouchableOpacity>
       </DefaultModal>
@@ -80,7 +86,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 16,
     maxHeight: "90%",
-    // flex: 1,
   },
   info: { fontWeight: "500", fontSize: 18 },
   option: {
@@ -91,6 +96,11 @@ const styles = StyleSheet.create({
   optionText: {
     fontSize: 16,
     color: "#333",
+  },
+  close: {
+    position: "absolute",
+    top: 10,
+    right: 10,
   },
 });
 

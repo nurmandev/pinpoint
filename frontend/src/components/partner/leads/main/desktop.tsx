@@ -173,7 +173,7 @@ const LeadsDesktop: React.FC = () => {
               </View>
             }
           >
-            <LeadsModal />
+            {(close) => <LeadsModal />}
           </Modal>
         ))}
       </ScrollView>

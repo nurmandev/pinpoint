@@ -22,6 +22,7 @@ const styles = StyleSheet.create({
     height: "100%",
     justifyContent: "center",
     alignItems: "center",
+    zIndex: 20,
   },
   overlay: {
     position: "absolute",

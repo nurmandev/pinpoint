@@ -38,7 +38,7 @@ const Socials = () => {
           ListHeaderComponent={<HeaderStories />}
           showsVerticalScrollIndicator={false}
           scrollEnabled
-          style={{ flex: 3 }}
+          style={{ flex: 3, paddingBottom: 150 }}
         />
         {!isMobile && (
           <ScrollView

@@ -7,16 +7,41 @@ import {
   Dimensions,
   TouchableOpacity,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Entypo, Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { BlurView } from "expo-blur";
 import Followers from "@/src/components/menu/Followers";
 import Favourites from "@/src/components/menu/Favourites";
 import Activity from "@/src/components/Activity";
+import { useUser } from "@/src/context/User";
+import { imageURL } from "@/src/services/api";
+import { fetchPostsByLocation } from "@/src/services/post";
+import { Post } from "@/src/types/post";
 
 const Profile = () => {
+  const { user } = useUser();
   const [currentTab, setCurrentTab] = useState("Activity");
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        if (!user?._id) return;
+        setLoading(true);
+        const postsData = await fetchPostsByLocation(user?._id);
+        setPosts(postsData);
+      } catch (error) {
+        console.error("Error fetching posts:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPosts();
+  }, [user?._id]);
+
   return (
     <View style={{ flex: 1 }}>
       <View style={styles.header}>
@@ -31,14 +56,16 @@ const Profile = () => {
       <ScrollView>
         <View style={styles.selectedItem}>
           <Image
-            source={require("../../../../../assets/images/user1.png")}
+            source={{ uri: imageURL + user?.avatarUrl }}
             style={styles.mainImage}
             resizeMode="cover"
           />
           <View style={styles.userDetail}>
             <View style={styles.name}>
-              <Text style={styles.username}>@username</Text>
-              <Text style={styles.fullname}>User Name</Text>
+              <Text style={styles.username}>@{user?.username}</Text>
+              <Text style={styles.fullname}>
+                {user?.firstName} {user?.lastName}
+              </Text>
             </View>
             <View style={styles.other}>
               <View style={styles.badge}>
@@ -62,7 +89,7 @@ const Profile = () => {
                 ))}
               </View>
               <View style={styles.followerCont}>
-                <View style={styles.otherpics}>
+                {/*  <View style={styles.otherpics}>
                   <BlurView
                     intensity={100}
                     tint="dark"
@@ -77,9 +104,11 @@ const Profile = () => {
                   <Text style={[styles.username, { position: "absolute" }]}>
                     +2
                   </Text>
-                </View>
+                </View> */}
                 <View style={styles.followers}>
-                  <Text style={styles.followersText}>312 Followers</Text>
+                  <Text style={styles.followersText}>
+                    {user?.follower?.length || 0} Followers
+                  </Text>
                 </View>
               </View>
             </View>
@@ -115,7 +144,9 @@ const Profile = () => {
           </TouchableOpacity>
         </View>
         <View style={styles.otherContent}>
-          {currentTab === "Activity" && <Activity />}
+          {currentTab === "Activity" && (
+            <Activity loading={loading} posts={posts} />
+          )}
           {currentTab === "Followers" && <Followers />}
           {currentTab === "Favourites" && <Favourites />}
         </View>
@@ -148,6 +179,7 @@ const styles = StyleSheet.create({
   mainImage: {
     width: "100%",
     height: "100%",
+    backgroundColor: "gray",
   },
   userDetail: {
     position: "absolute",

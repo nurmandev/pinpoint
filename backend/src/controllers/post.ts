@@ -43,12 +43,37 @@ export const createPost = async (req: CustomRequest, res: Response) => {
 export const getAllPost = async (req: CustomRequest, res: Response) => {
   try {
     const posts = await Post.find()
-      .populate("location userId")
+      .populate("location", "locationName address images")
+      .populate("userId", "locationName address images")
       .sort({ createdAt: -1 });
     res.status(200).json(posts);
     return;
   } catch (error) {
     console.log(error);
+    res.status(500).json({ message: "Internal server error", error });
+  }
+};
+
+// Controller to get posts by location
+export const getPostsByLocation = async (req: CustomRequest, res: Response) => {
+  try {
+    const { locationId } = req.params;
+
+    // Validate locationId presence
+    if (!locationId) {
+      res.status(400).json({ message: "Location ID is required" });
+      return;
+    }
+
+    // Fetch posts related to the locationId
+    const posts = await Post.find({ location: locationId })
+      .populate("location", "locationName address images")
+      .populate("userId", "locationName address images")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json(posts);
+  } catch (error) {
+    console.error("Error fetching posts for location:", error);
     res.status(500).json({ message: "Internal server error", error });
   }
 };

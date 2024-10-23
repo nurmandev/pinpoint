@@ -1,3 +1,4 @@
+import { getBackendErrorMessage } from "../utils/error";
 import axiosInstance from "./api";
 
 export interface LocationData {
@@ -19,10 +20,17 @@ export interface LocationData {
     question: string;
     options: string[];
   };
-  coordinates?: {
+  coordinates: {
     latitude: number;
     longitude: number;
   };
+}
+interface LocationFilterParams {
+  latitude: number;
+  longitude: number;
+  radius?: number;
+  category?: string;
+  businessType?: "service" | "product" | "both";
 }
 
 // Create a new location
@@ -70,8 +78,8 @@ export const createLocation = async (locationData: LocationData) => {
 
     return response.data;
   } catch (error) {
-    console.error("Error creating location:", error);
-    throw error;
+    console.error("Error creating location:", getBackendErrorMessage(error));
+    throw getBackendErrorMessage(error);
   }
 };
 
@@ -122,5 +130,32 @@ export const deleteLocation = async (locationId: string) => {
   } catch (error) {
     console.log("Error deleting location:", error);
     throw error;
+  }
+};
+
+export const getNearbyLocations = async (params: LocationFilterParams) => {
+  try {
+    const { latitude, longitude, radius, category, businessType } = params;
+
+    // Construct query parameters
+    const queryParams = new URLSearchParams({
+      latitude: latitude.toString(),
+      longitude: longitude.toString(),
+    });
+
+    if (radius) queryParams.append("radius", radius.toString());
+    if (category) queryParams.append("category", category);
+    if (businessType) queryParams.append("businessType", businessType);
+
+    // Make GET request to the API
+    const response = await axiosInstance.get(
+      `/locations/nearby?${queryParams.toString()}`
+    );
+
+    // Return the location data from the response
+    return response.data.locations;
+  } catch (error) {
+    console.error("Error fetching nearby locations:", error);
+    throw getBackendErrorMessage(error);
   }
 };

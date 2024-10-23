@@ -1,45 +1,68 @@
 import { StyleSheet, Text, View, Image } from "react-native";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Divider, useTheme } from "react-native-paper";
 import Rating from "../../Rating";
 import Button from "../../Button";
+import { useProduct } from "@/src/context/Product";
+import { IProduct } from "@/src/types/product";
+import { imageURL } from "@/src/services/api";
+import { router } from "expo-router";
 
-const Details = () => {
+const Details: React.FC<{ product?: IProduct }> = ({ product }) => {
   const { colors } = useTheme();
+
   return (
     <View style={styles.card}>
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.serviceTitle}>
-          Product Name <Text style={styles.price}>$1500.99</Text> -{" "}
-          <Text style={styles.status}>Pending</Text>
+          {product?.name} <Text style={styles.price}>${product?.price}</Text>
         </Text>
       </View>
 
       {/* Sub details */}
       <Text style={[styles.subDetails, { color: colors.primary }]}>
-        Clothing / Shirt / Gender: <Text style={{ color: "black" }}>Male</Text>{" "}
-        - Color: <Text style={{ color: "black" }}>White</Text>{" "}
+        {product?.category[0]} / {product?.subCategory} /{" "}
+        {product?.options?.map((option) => (
+          <Text>
+            {option.optionCategory}:{" "}
+            <Text style={{ color: "black" }}>{option.optionName}</Text>
+            {" - "}
+          </Text>
+        ))}
       </Text>
       <Divider style={{ marginVertical: 20 }} />
       <Text style={styles.deatail}> Details</Text>
       <Text style={styles.textGray}>Location assigned</Text>
-      <Text style={{ fontWeight: "500" }}> Location Name 1</Text>
-      <Text style={{ fontWeight: "500" }}> Location Name 2</Text>
+      {product?.location.map((loc) => (
+        <Text style={{ fontWeight: "500" }}> {loc.locationName}</Text>
+      ))}
       <Divider style={{ marginVertical: 20 }} />
       <Text style={styles.deatail}> Rating</Text>
       <Text style={styles.textGray}>Total Reviews</Text>
-      <Text style={{ fontWeight: "500" }}>10</Text>
-      <Text style={[styles.textGray, { marginTop: 20 }]}>Rating(5/5)</Text>
-      <Rating show={false} rating={5} />
-      <Text style={[styles.textGray, { marginTop: 20 }]}>Rating(5/5)</Text>
-      <Image
-        source={require("../../../../assets/images/product.png")}
-        style={styles.mainImage}
-        resizeMode="cover"
-      />
+      <Text style={{ fontWeight: "500" }}>{product?.reviews?.length}</Text>
+      <Text style={[styles.textGray, { marginTop: 20 }]}>
+        Rating({product?.rating}/5)
+      </Text>
+      <Rating show={false} rating={product?.rating || 0} />
+      <Text style={[styles.textGray, { marginTop: 20 }]}>
+        Rating({product?.rating}/5)
+      </Text>
+      <View style={{ flexDirection: "row", gap: 10, flexWrap: "wrap" }}>
+        {product?.images.map((image) => (
+          <Image
+            source={{ uri: imageURL + image }}
+            style={styles.mainImage}
+            resizeMode="cover"
+          />
+        ))}
+      </View>
       <View style={styles.actionButtons}>
-        <Button variant="outlined" containerStyle={styles.declineButton}>
+        <Button
+          variant="outlined"
+          onPress={() => router.push("/products/add")}
+          containerStyle={styles.declineButton}
+        >
           Edit
         </Button>
         <Button variant="contained" containerStyle={styles.approveButton}>

@@ -1,3 +1,6 @@
+import { useUser } from "@/src/context/User";
+import { imageURL } from "@/src/services/api";
+import { User } from "@/src/types/user";
 import { lightColors } from "@/src/utils/colors";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
@@ -14,52 +17,46 @@ import {
 
 const { width } = Dimensions.get("screen");
 
-const users = [
-  { id: "1", name: "User Name", username: "@username", following: false },
-  { id: "2", name: "User Name", username: "@username", following: true },
-  { id: "3", name: "User Name", username: "@username", following: false },
-  { id: "4", name: "User Name", username: "@username", following: true },
-  { id: "5", name: "User Name", username: "@username", following: false },
-  { id: "6", name: "User Name", username: "@username", following: false },
-  { id: "7", name: "User Name", username: "@username", following: true },
-  { id: "8", name: "User Name", username: "@username", following: false },
-];
-
 const Followers = () => {
+  const { user } = useUser();
   const [search, setSearch] = useState("");
 
   const toggleFollow = (id: string) => {
-    const index = users.findIndex((user) => user.id === id);
-    users[index].following = !users[index].following;
+    //
   };
 
-  const renderItem = ({ item }: any) => (
-    <View style={styles.userContainer}>
-      <Image
-        source={{
-          uri: "https://randomuser.me/api/portraits/men/1.jpg",
-        }}
-        style={styles.profileImage}
-      />
-      <View style={styles.userInfo}>
-        <Text style={styles.userName}>{item.name}</Text>
-        <Text style={styles.userUsername}>{item.username}</Text>
-      </View>
-      <TouchableOpacity
-        style={[styles.followButton, item.following && styles.followingButton]}
-        onPress={() => toggleFollow(item.id)}
-      >
-        <Text
-          style={[
-            styles.followButtonText,
-            item.following && styles.followingText,
-          ]}
+  const renderItem = ({ item }: { item: User }) => {
+    const isFollowing = user?.following.includes(item._id);
+    return (
+      <View style={styles.userContainer}>
+        <Image
+          source={{
+            uri: imageURL + item.avatarUrl,
+          }}
+          style={styles.profileImage}
+        />
+        <View style={styles.userInfo}>
+          <Text style={styles.userName}>
+            {item.firstName} {item.lastName}
+          </Text>
+          <Text style={styles.userUsername}>{item.username}</Text>
+        </View>
+        <TouchableOpacity
+          style={[styles.followButton, isFollowing && styles.followingButton]}
+          onPress={() => toggleFollow(item._id)}
         >
-          {item.following ? "Following" : "Follow"}
-        </Text>
-      </TouchableOpacity>
-    </View>
-  );
+          <Text
+            style={[
+              styles.followButtonText,
+              isFollowing && styles.followingText,
+            ]}
+          >
+            {isFollowing ? "Following" : "Follow"}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -73,9 +70,13 @@ const Followers = () => {
           onChangeText={(text) => setSearch(text)}
         />
       </View>
-      {users.map((item) => (
-        <View key={item.id}>{renderItem({ item })}</View>
-      ))}
+      {user?.follower && user?.follower.length <= 0 ? (
+        <Text>No Follower</Text>
+      ) : (
+        user?.follower.map((item) => (
+          <View key={item._id}>{renderItem({ item })}</View>
+        ))
+      )}
     </View>
   );
 };

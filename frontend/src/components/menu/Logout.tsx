@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "react-native-paper";
 import { useUser } from "@/src/context/User";
 
-const Logout = () => {
+const Logout: React.FC<{ close: () => void }> = ({ close }) => {
   const { colors } = useTheme();
   const { logout } = useUser();
   return (
@@ -38,6 +38,7 @@ const Logout = () => {
             justifyContent: "center",
             alignItems: "center",
           }}
+          onPress={close}
         >
           <Text style={{ color: "#fff", fontSize: 16 }}>No</Text>
         </TouchableOpacity>

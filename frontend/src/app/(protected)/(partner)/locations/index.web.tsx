@@ -1,50 +1,33 @@
 import { Modal, ScrollView, StyleSheet, Text, View } from "react-native";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Checkbox, Divider, useTheme } from "react-native-paper";
 import Button from "@/src/components/Button";
 import { router } from "expo-router";
 import LeadsModal from "@/src/components/partner/leads/LeadModal";
 import { Feather, Ionicons } from "@expo/vector-icons";
+import { useLocation } from "@/src/context/Location";
+import { data } from "@/src/components/onboarding/Onboarding";
+import LoadingOverlay from "@/src/components/LoadingOverlay";
 
-const data = [
-  {
-    id: "1",
-    name: "Location name",
-    address: "bbbdd",
-    description:
-      "Lorem ipsum dolor sit amet, consectetur adipird elit, sed do eiusmod tempor incididunt ut labore et e.",
-  },
-  {
-    id: "2",
-    name: "Location name",
-    address: "bbbdd",
-    description:
-      "Lorem ipsum dolor sit amet, consectetur adipird elit, sed do eiusmod tempor incididunt ut labore et e.",
-  },
-  {
-    id: "3",
-    name: "Location name",
-    address: "bbbdd",
-    description:
-      "Lorem ipsum dolor sit amet, consectetur adipird elit, sed do eiusmod tempor incididunt ut labore et e.",
-  },
-  {
-    id: "4",
-    name: "Location name",
-    address: "bbbdd",
-    description:
-      "Lorem ipsum dolor sit amet, consectetur adipird elit, sed do eiusmod tempor incididunt ut labore et e.",
-  },
-  {
-    id: "5",
-    name: "Location name",
-    address: "bbbdd",
-    description:
-      "Lorem ipsum dolor sit amet, consectetur adipird elit, sed do eiusmod tempor incididunt ut labore et e.",
-  },
-];
 const Location = () => {
   const { colors } = useTheme();
+  const { loadUserLocations, locations, deleteLocationById } = useLocation();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchLocation = async () => {
+      try {
+        setLoading(true);
+        await loadUserLocations();
+      } catch (error) {
+        console.log(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchLocation();
+  }, []);
+
   return (
     <View style={styles.container}>
       <Text style={styles.breadcrum}>
@@ -76,16 +59,30 @@ const Location = () => {
       </View>
       <Divider />
 
+      {loading && <LoadingOverlay />}
       {/* Table Rows */}
+      {locations.length <= 0 && <Text>No Location Found</Text>}
       <ScrollView style={styles.tableBody}>
-        {data.map((item) => (
-          <View style={styles.tableRow} key={item.id}>
-            <Text style={styles.tableCell}>{item.name}</Text>
-            <Text style={styles.tableCell}>{item.address}</Text>
-            <Text style={styles.tableCell}>{item.description}</Text>
+        {locations.map((loc) => (
+          <View style={styles.tableRow} key={loc._id}>
+            <Text style={styles.tableCell}>{loc.locationName}</Text>
+            <Text style={styles.tableCell}>{loc.address}</Text>
+            <Text style={styles.tableCell} numberOfLines={2}>
+              {loc.description}
+            </Text>
             <View style={styles.actionButtons}>
-              <Feather name="edit" size={20} color="gray" />
-              <Ionicons name="trash-outline" size={20} color="red" />
+              <Feather
+                onPress={() => router.push("/locations/setup")}
+                name="edit"
+                size={20}
+                color="gray"
+              />
+              <Ionicons
+                onPress={() => deleteLocationById(loc._id)}
+                name="trash-outline"
+                size={20}
+                color="red"
+              />
             </View>
           </View>
         ))}
@@ -148,7 +145,7 @@ const styles = StyleSheet.create({
   },
   actionButtons: {
     flexDirection: "row",
-    justifyContent: "center",
+    // justifyContent: "center",
     gap: 10,
     flex: 1,
   },

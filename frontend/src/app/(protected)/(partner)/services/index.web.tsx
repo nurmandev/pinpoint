@@ -1,5 +1,5 @@
 import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Divider, useTheme } from "react-native-paper";
 import Button from "@/src/components/Button";
 import { router } from "expo-router";
@@ -7,10 +7,44 @@ import { Feather, Ionicons } from "@expo/vector-icons";
 import Rating from "@/src/components/Rating";
 import Modal from "@/src/components/modals/modal";
 import Details from "@/src/components/partner/product/details";
-import { rated, services } from "@/src/utils/data/services";
+import { useService } from "@/src/context/Service";
+import { IService } from "@/src/types/service";
 
 const Location = () => {
   const { colors } = useTheme();
+  const { fetchServices } = useService();
+  const [services, setServices] = useState<IService[]>([]);
+  const [rated, setRated] = useState<IService[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const getServices = async () => {
+      try {
+        setLoading(true);
+        const result = await fetchServices({});
+        setServices(result);
+      } catch (error: any) {
+        setError(error as string);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const getRatedServices = async () => {
+      try {
+        setLoading(true);
+        const result = await fetchServices({});
+        setRated(result);
+      } catch (error: any) {
+        setError(error as string);
+      } finally {
+        setLoading(false);
+      }
+    };
+    getServices();
+    getRatedServices();
+  }, []);
   return (
     <View style={styles.container}>
       <Text style={styles.breadcrum}>
@@ -58,27 +92,45 @@ const Location = () => {
           <ScrollView style={styles.tableBody}>
             {services.map((item) => (
               <Modal
-                key={item.id}
+                key={item._id}
                 button={
                   <View style={styles.tableRow}>
                     <Text style={styles.tableCell}>{item.name}</Text>
-                    <Text style={styles.tableCell}>{item.price}</Text>
-                    <Text style={styles.tableCell}>{item.location}</Text>
-                    <Text style={styles.tableCell}>{item.category}</Text>
-                    <Text style={styles.tableCell}>{item.subCategory}</Text>
                     <Text style={styles.tableCell}>
-                      <Text style={styles.variant}>Male</Text>
-                      <Text style={styles.variant}>White</Text>
+                      {" "}
+                      {item.priceType === "flat"
+                        ? item.price
+                        : `$${item.priceRange?.from} - $${item.priceRange?.to}`}
+                    </Text>
+                    <Text style={styles.tableCell}>
+                      {item.location.map((loc) => loc.locationName).join(", ")}
+                    </Text>
+                    <Text style={styles.tableCell}>
+                      {item.category.join(", ")}
+                    </Text>
+                    <Text style={styles.tableCell}>
+                      {item.subCategory && item.subCategory.join(", ")}
+                    </Text>
+                    <Text style={styles.tableCell}>
+                      {" "}
+                      {item.options?.map((option) => (
+                        <Text style={styles.variant}> {option.optionName}</Text>
+                      ))}
                     </Text>
                     <View style={styles.actionButtons}>
                       <Feather name="link" size={20} color="gray" />
-                      <Feather name="edit" size={20} color="gray" />
+                      <Feather
+                        name="edit"
+                        onPress={() => router.push("/services/add")}
+                        size={20}
+                        color="gray"
+                      />
                       <Ionicons name="trash-outline" size={20} color="red" />
                     </View>
                   </View>
                 }
               >
-                <Details />
+                {() => <Details />}
               </Modal>
             ))}
           </ScrollView>
@@ -110,19 +162,22 @@ const Location = () => {
               <View style={styles.tableRow}>
                 <Text style={styles.tableCell}>{item.name}</Text>
                 <Text style={styles.tableCell}>
-                  <Text style={styles.variant}>Male</Text>
-                  <Text style={styles.variant}>White</Text>
+                  {item.options?.map((option) => (
+                    <Text style={styles.variant}> {option.optionName}</Text>
+                  ))}
                 </Text>
                 <Text style={styles.tableCell}>{item.price}</Text>
-                <Text style={styles.tableCell}>{item.customer}</Text>
-                <Text style={styles.tableCell}>{item.date}</Text>{" "}
+                <Text style={styles.tableCell}>Customer name</Text>
+                <Text style={styles.tableCell}>12/12/24</Text>
                 <View style={[styles.actionButtons]}>
                   <Rating rating={item.rating} show={false} />
                 </View>
-                <Text style={styles.tableCell}>{item.description}</Text>
+                <Text style={styles.tableCell} numberOfLines={2}>
+                  {item.description}
+                </Text>
                 <View style={styles.actionButtons}>
                   <Image
-                    source={require("../../../../../assets/images/service.png")}
+                    source={{ uri: item.images[0] }}
                     style={styles.mainImage}
                     resizeMode="cover"
                   />

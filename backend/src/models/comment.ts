@@ -1,6 +1,6 @@
 import { Schema, model, Document } from "mongoose";
 
-interface CommentDocument extends Document {
+export interface CommentDocument extends Document {
   postId: Schema.Types.ObjectId; // The post this comment belongs to
   userId: Schema.Types.ObjectId; // User who made the comment
   content: string; // Comment content

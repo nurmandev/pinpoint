@@ -76,7 +76,7 @@ const Header = () => {
               />
             }
           >
-            <AddPost />
+            {(close) => <AddPost onClose={close} />}
           </Modal>
           <Menu.Item
             leadingIcon="movie-open-play-outline"

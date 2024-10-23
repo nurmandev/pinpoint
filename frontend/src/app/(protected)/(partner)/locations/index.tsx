@@ -6,6 +6,7 @@ import { router } from "expo-router";
 import { Feather } from "@expo/vector-icons";
 import { useLocation } from "@/src/context/Location";
 import LoadingOverlay from "@/src/components/LoadingOverlay";
+import { imageURL } from "@/src/services/api";
 
 const Location = () => {
   const { colors } = useTheme();
@@ -55,15 +56,17 @@ const Location = () => {
           {locations.map((item) => (
             <View style={styles.card} key={item._id}>
               <View style={styles.head}>
-                <View style={styles.row}>
+                <View style={[styles.row, { flex: 1 }]}>
                   <Image
-                    source={{ uri: item.images[0] }}
+                    source={{ uri: imageURL + item.images[0] }}
                     style={styles.image}
                     resizeMode="cover"
                   />
-                  <View style={{}}>
-                    <Text style={styles.headerText}>{item.locationName}</Text>
-                    <Text>{item.address}</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.headerText} numberOfLines={1}>
+                      {item.locationName}
+                    </Text>
+                    <Text numberOfLines={2}>{item.address}</Text>
                   </View>
                 </View>
                 <View style={styles.row}>
@@ -112,6 +115,7 @@ const styles = StyleSheet.create({
   image: {
     width: 70,
     height: 50,
+    borderRadius: 5,
   },
   card: {
     borderWidth: 1,

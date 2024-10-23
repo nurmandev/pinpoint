@@ -8,7 +8,7 @@ import {
   StyleSheet,
   Dimensions,
 } from "react-native";
-import { Video, ResizeMode } from "expo-av";
+import { ResizeMode, Video } from "expo-av";
 import { Ionicons, Entypo, FontAwesome, Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { Menu } from "react-native-paper";
@@ -47,7 +47,7 @@ export const reportOption = [
   { label: "Other (Add Description)", value: "Other" },
 ];
 
-const { height } = Dimensions.get("screen");
+const { height, width } = Dimensions.get("screen");
 
 interface VideoItemProps {
   item: SortedStory;
@@ -154,7 +154,7 @@ const ReelItem: React.FC<VideoItemProps> = ({
               style={styles.loadingIndicator}
             />
           )}
-          <Video
+          {/* <Video
             ref={(ref) => {
               videoRefs.current![index] = ref!;
             }}
@@ -165,7 +165,7 @@ const ReelItem: React.FC<VideoItemProps> = ({
             shouldPlay={false}
             onLoadStart={() => setLoading(true)} // Start loading indicator
             onLoad={() => setLoading(false)} // Stop loading indicator when the video is ready
-          />
+          /> */}
 
           {showControls && !loading && (
             <Ionicons
@@ -196,7 +196,9 @@ const ReelItem: React.FC<VideoItemProps> = ({
         <View style={{ flexDirection: "row", alignItems: "center" }}>
           <Image
             source={{
-              uri: item.location ? item.location?.images[0] : item.avatarUrl,
+              uri:
+                imageURL +
+                (item.location ? item.location?.images[0] : item.avatarUrl),
             }}
             style={styles.userAvatar}
           />
@@ -205,7 +207,9 @@ const ReelItem: React.FC<VideoItemProps> = ({
               {item.location ? item.location?.locationName : item.username}
             </Text>
             {item.location ? (
-              <Text style={styles.location}>{item.location?.address}</Text>
+              <Text style={styles.location} numberOfLines={1}>
+                {item.location?.address}
+              </Text>
             ) : null}
           </View>
         </View>
@@ -322,6 +326,7 @@ const styles = StyleSheet.create({
   location: {
     color: "white",
     opacity: 0.5,
+    width: width * 0.5,
   },
   actionIcons: {
     position: "absolute",

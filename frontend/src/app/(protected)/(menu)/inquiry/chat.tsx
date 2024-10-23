@@ -1,10 +1,18 @@
 import Button from "@/src/components/Button";
+import ChatFooter from "@/src/components/chat/ChatFooter";
+import { Item } from "@/src/components/chat/Item";
 import Close from "@/src/components/menu/inquiry/Close";
 import Decline from "@/src/components/menu/inquiry/Decline";
+import { useMessage } from "@/src/context/Message";
+import { useUser } from "@/src/context/User";
+import { imageURL } from "@/src/services/api";
+import socket from "@/src/socket";
+import { IMessage } from "@/src/types/message";
 import { lightColors } from "@/src/utils/colors";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import React from "react";
+import moment from "moment";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -16,87 +24,80 @@ import {
 } from "react-native";
 import { Appbar, useTheme } from "react-native-paper";
 
-const messages = [
-  { id: "1", text: "Lorem", sender: "user", time: "Today, 09:00 AM" },
-  {
-    id: "2",
-    text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim",
-    sender: "user",
-    time: "Today, 09:00 AM",
-  },
-  { id: "3", text: "Lorem", sender: "other", time: "Today, 09:01 AM" },
-  {
-    id: "4",
-    text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim",
-    sender: "other",
-    time: "Today, 09:01 AM",
-  },
-  {
-    id: "5",
-    text: "Partner Sent an Offer:",
-    offer: { price: "$1500.99", serviceName: "Service name" },
-    time: "Today, 09:00 AM",
-  },
-];
-
 const Chat = () => {
   const { colors } = useTheme();
-  const renderItem = ({ item }: any) => {
-    if (item.offer) {
-      return (
-        <View style={styles.offerContainer}>
-          <Text style={styles.offerText}>{item.text}</Text>
-          <View style={styles.offerContentContainer}>
-            <Text style={styles.offerDetails}>
-              Price for service: {item.offer.price}
-            </Text>
-            <Text style={styles.offerDetails}>
-              Service name: {item.offer.serviceName}
-            </Text>
-          </View>
-          <View style={styles.offerButtons}>
-            <Decline />
-            <TouchableOpacity style={styles.approveButton}>
-              <Text style={styles.approveButtonText}>Approve</Text>
-            </TouchableOpacity>
-          </View>
-          <Text style={styles.timeText}>{item.time}</Text>
-        </View>
-      );
-    }
+  const { user } = useUser();
+  const {
+    messages,
+    isTypingList,
+    currentConversation,
+    sendMessage,
+    setCurrentConversation,
+  } = useMessage();
+  const [messageInput, setMessageInput] = useState("");
+  const [image, setImage] = useState("");
+  const [sending, setSending] = useState({
+    value: false,
+    image: "",
+    message: "",
+    failed: false,
+  });
 
-    return (
-      <View
-        style={{
-          alignItems: item.sender === "user" ? "flex-start" : "flex-end",
-        }}
-      >
-        <View
-          style={[
-            styles.messageContainer,
-            item.sender === "user" ? styles.userMessage : styles.otherMessage,
-          ]}
-        >
-          <Text
-            style={[
-              styles.messageText,
-              item.sender !== "user" && { color: "black" },
-            ]}
-          >
-            {item.text}
-          </Text>
-        </View>
-        <Text
-          style={[
-            styles.timeText,
-            { textAlign: item.sender === "user" ? "left" : "right" },
-          ]}
-        >
-          {item.time}
-        </Text>
-      </View>
-    );
+  const startTyping = () => {
+    socket.emit("typing", {
+      conversationId: currentConversation?._id,
+      userId: user?._id,
+    });
   };
+
+  // Function to emit stopTyping event
+  const stopTyping = () => {
+    socket.emit("stopTyping", {
+      conversationId: currentConversation?._id,
+      userId: user?._id,
+    });
+  };
+
+  const handleMessageSubmit = async () => {
+    // Handle sending message logic
+    if (!currentConversation) return;
+    if (!messageInput && !image) return;
+    try {
+      setSending({ value: true, image, message: messageInput, failed: false });
+      setMessageInput("");
+      await sendMessage({
+        content: messageInput,
+        conversationId: currentConversation._id,
+        image,
+      });
+      setSending({ value: false, image: "", message: "", failed: false });
+    } catch (error) {
+      console.log(error);
+      setSending((prev) => ({ ...prev, value: true, failed: true }));
+    }
+  };
+
+  const handleRetry = async () => {
+    if (!currentConversation) return;
+    try {
+      setSending((prev) => ({ ...prev, value: true, failed: false }));
+      await sendMessage({
+        content: sending.message,
+        conversationId: currentConversation._id,
+        image: sending.image,
+      });
+
+      setSending({ value: false, image: "", message: "", failed: false });
+    } catch (error) {
+      setSending((prev) => ({ ...prev, value: true, failed: true }));
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      setCurrentConversation(null);
+    };
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -104,31 +105,50 @@ const Chat = () => {
         style={{ borderBottomWidth: 1, borderBottomColor: "#f1f1f1" }}
       >
         <Appbar.BackAction onPress={() => router.back()} />
-        <Appbar.Content title="James" />
+        <Appbar.Content title={currentConversation?.otherUser.username} />
 
         <Image
-          source={require("../../../../../assets/images/slide1.png")}
+          source={{ uri: imageURL + currentConversation?.otherUser.image }}
           style={styles.userAvatar}
         />
       </Appbar.Header>
       <FlatList
-        data={messages}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id}
+        data={messages.slice().reverse()}
+        renderItem={({ item }) => <Item item={item} />}
+        keyExtractor={(item) => item._id}
         contentContainerStyle={styles.chatContainer}
+        inverted
+        ListHeaderComponent={
+          <ChatFooter
+            currentConversation={currentConversation}
+            handleRetry={handleRetry}
+            isTypingList={isTypingList}
+            sending={sending}
+          />
+        }
       />
 
       <View style={styles.inputContainer}>
         <View style={styles.inputCont}>
           <TextInput
             style={styles.input}
-            placeholder="Add your comment..."
+            placeholder="Type here"
             placeholderTextColor={"gray"}
+            value={messageInput}
+            onChangeText={(text) => {
+              setMessageInput(text);
+              startTyping();
+            }}
+            onFocus={startTyping}
+            onBlur={stopTyping}
           />
           <TouchableOpacity style={styles.sendButton}>
             <Ionicons name="attach" size={24} color={colors.primary} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.sendButton}>
+          <TouchableOpacity
+            style={styles.sendButton}
+            onPress={handleMessageSubmit}
+          >
             <Ionicons name="send" size={24} color={colors.primary} />
           </TouchableOpacity>
         </View>
@@ -164,18 +184,20 @@ const styles = StyleSheet.create({
     marginVertical: 5,
   },
   userMessage: {
-    backgroundColor: lightColors.colors.primary,
-    borderTopRightRadius: 10,
+    backgroundColor: "#d8d8d8",
+    borderTopLeftRadius: 10,
   },
   otherMessage: {
-    backgroundColor: "#e5e5ea",
-    borderTopLeftRadius: 10,
+    backgroundColor: lightColors.colors.primary,
+    borderTopRightRadius: 10,
+    color: "white",
   },
   messageText: {
     color: "#fff",
   },
   timeText: {
     marginTop: 5,
+    marginBottom: 10,
   },
   offerContainer: {
     alignSelf: "flex-start",

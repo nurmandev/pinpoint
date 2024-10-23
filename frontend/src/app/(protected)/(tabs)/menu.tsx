@@ -24,6 +24,7 @@ import Modal from "@/src/components/modals/modal";
 import Logout from "@/src/components/menu/Logout";
 import DeleteAccount from "@/src/components/menu/DeleteAccount";
 import { useUser } from "@/src/context/User";
+import { imageURL } from "@/src/services/api";
 
 const Menu = () => {
   const { colors } = useTheme();
@@ -54,7 +55,7 @@ const Menu = () => {
       <ScrollView contentContainerStyle={{ padding: 15 }}>
         <View style={styles.selectedItem}>
           <Image
-            source={{ uri: user?.avatarUrl }}
+            source={{ uri: imageURL + user?.avatarUrl }}
             style={styles.mainImage}
             resizeMode="cover"
           />
@@ -141,7 +142,8 @@ const Menu = () => {
             {renderGridItem(
               <Ionicons name="headset-outline" size={24} color="#555" />,
               "Support",
-              () => router.push("/support")
+              () => router.push("/dashboard")
+              // () => router.push("/support")
             )}
             {renderGridItem(
               <Ionicons name="document-text-outline" size={24} color="#555" />,
@@ -162,7 +164,7 @@ const Menu = () => {
               </View>
             }
           >
-            <Logout />
+            {(close) => <Logout close={close} />}
           </Modal>
           <Modal
             button={
@@ -172,7 +174,7 @@ const Menu = () => {
               </View>
             }
           >
-            <DeleteAccount />
+            {(close) => <DeleteAccount />}
           </Modal>
         </View>
       </ScrollView>

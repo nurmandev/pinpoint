@@ -22,11 +22,12 @@ import { useLocation } from "@/src/context/Location";
 import { ResizeMode, Video } from "expo-av";
 import { useUser } from "@/src/context/User";
 import { UserRole } from "@/src/types/user";
+import useDimensions from "@/src/hooks/useDimension";
 
 const WIDTH = Dimensions.get("screen").width;
 const HEIGHT = Dimensions.get("screen").height;
 
-const AddPost = () => {
+const AddPost: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const { createNewPost } = usePost();
   const { user } = useUser();
   const { loadUserLocations, locations } = useLocation();
@@ -38,6 +39,7 @@ const AddPost = () => {
   const [selectedLocation, setSelectedLocation] = useState<string>(""); // To hold selected location
   const [distance, setDistance] = useState<number>(0);
   const [creatingPost, setCreatingPost] = useState(false);
+  const { isMobile } = useDimensions();
   const [cropData, setCropData] = useState({
     top: 0,
     left: 0,
@@ -114,7 +116,9 @@ const AddPost = () => {
   return (
     <View style={{ flex: 1 }}>
       <Appbar.Header>
-        <Appbar.BackAction onPress={() => router.back()} />
+        <Appbar.BackAction
+          onPress={() => (isMobile ? router.back() : onClose())}
+        />
         <Appbar.Content title="Create Social Post" />
       </Appbar.Header>
       {loading ? (

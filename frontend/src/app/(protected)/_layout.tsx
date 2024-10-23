@@ -24,10 +24,6 @@ export default function Layout() {
     return <Redirect href="/verify" />;
   }
 
-  // if (user && user === "partner") {
-  //   return <Redirect href="/dashboard" />;
-  // }
-
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(tabs)" />

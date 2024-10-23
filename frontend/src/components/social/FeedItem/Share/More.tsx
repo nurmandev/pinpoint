@@ -3,7 +3,7 @@ import React from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { Divider, TextInput } from "react-native-paper";
 
-const More = () => {
+const More: React.FC<{ close: () => void }> = ({ close }) => {
   return (
     <View>
       <Text

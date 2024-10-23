@@ -6,18 +6,42 @@ import {
   View,
   TouchableOpacity,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { router } from "expo-router";
-import { Appbar } from "react-native-paper";
+import { ActivityIndicator, Appbar } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
 import Section from "@/src/components/menu/inquiry/Section";
 import Button from "@/src/components/Button";
 import Pending from "@/src/components/menu/inquiry/Pending";
 import Active from "@/src/components/menu/inquiry/Active";
 import Completed from "@/src/components/menu/inquiry/Completed";
+import { getUserLeads } from "@/src/services/lead";
+import { useToastNotification } from "@/src/context/ToastNotificationContext";
 
 const inquiry = () => {
   const [currentTab, setCurrentTab] = useState("Pending");
+  const { addNotification } = useToastNotification();
+  const [leads, setLeads] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchLLeads = async () => {
+      try {
+        setLoading(true);
+        console.log(currentTab);
+        const res = await getUserLeads(
+          currentTab === "Completed" ? "Complete" : currentTab
+        );
+        setLeads(res.leads);
+      } catch (error: any) {
+        addNotification(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchLLeads();
+  }, [currentTab]);
+
   return (
     <View style={{ flex: 1 }}>
       <Appbar.Header
@@ -26,7 +50,6 @@ const inquiry = () => {
         <Appbar.BackAction onPress={() => router.back()} />
         <Appbar.Content title="Inquires" />
       </Appbar.Header>
-
       <View style={styles.tabContainer}>
         <View style={{ flex: 1 }}>
           <Button
@@ -54,9 +77,15 @@ const inquiry = () => {
         </View>
       </View>
       <ScrollView style={{ padding: 15, flex: 1 }}>
-        {currentTab === "Pending" && <Pending />}
-        {currentTab === "Active" && <Active />}
-        {currentTab === "Completed" && <Completed />}
+        {loading ? (
+          <ActivityIndicator />
+        ) : (
+          <>
+            {currentTab === "Pending" && <Pending leads={leads} />}
+            {currentTab === "Active" && <Active leads={leads} />}
+            {currentTab === "Completed" && <Completed leads={leads} />}
+          </>
+        )}
       </ScrollView>
     </View>
   );

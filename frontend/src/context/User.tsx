@@ -1,10 +1,11 @@
 import React, { createContext, useState, useContext } from "react";
-import { getUserService } from "../services/user";
+import { UserData, getUserService, updateUserService } from "../services/user";
 import { User } from "../types/user";
 
 interface UserContextType {
   user: User | null;
   getUser: () => Promise<void>;
+  updateUser: (data: UserData) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -22,6 +23,15 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const updateUser = async (data: UserData) => {
+    try {
+      const userData = await updateUserService(data);
+      setUser(userData.user);
+    } catch (error) {
+      console.error("Failed to fetch user data", error);
+    }
+  };
+
   const logout = async () => {
     setUser(null);
   };
@@ -30,6 +40,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       value={{
         user,
         getUser,
+        updateUser,
         logout,
       }}
     >

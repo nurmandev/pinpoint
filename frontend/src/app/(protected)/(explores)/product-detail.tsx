@@ -8,36 +8,18 @@ import {
   TouchableOpacity,
   TextInput,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { Appbar, Menu, useTheme } from "react-native-paper";
 import Rating from "@/src/components/Rating";
 import Button from "@/src/components/Button";
 import MultiSelect from "@/src/components/select/MultiSelect";
 import { reportOption } from "@/src/components/social/ReelItem";
-
-const reviews = [
-  {
-    id: 1,
-    title: "Product title",
-    rating: 5,
-    comment:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed doeiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut",
-    images: [],
-    user: "Daniel Wilson",
-    date: "07-07-24",
-  },
-  {
-    id: 2,
-    title: "Product title",
-    rating: 5,
-    comment: "",
-    images: [],
-    user: "Daniel Wilson",
-    date: "07-07-24",
-  },
-];
+import { useProduct } from "@/src/context/Product";
+import { IProduct } from "@/src/types/product";
+import LoadingOverlay from "@/src/components/LoadingOverlay";
+import { imageURL } from "@/src/services/api";
 
 const Detail = () => {
   const { colors } = useTheme();
@@ -45,15 +27,41 @@ const Detail = () => {
   const [showWebsite, setShowWebsite] = useState(false);
   const [message, setMessage] = useState("");
 
+  const { getProduct } = useProduct();
+  const { id } = useLocalSearchParams();
+  const [product, setProduct] = useState<IProduct | undefined>();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  console.log(id);
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        if (!id) return;
+        setLoading(true);
+        const response = await getProduct(id as string);
+        setProduct(response);
+        setLoading(false);
+      } catch (error: any) {
+        setError(error.message);
+      }
+    };
+    fetchProduct();
+  }, [id]);
+
   const openMenu = () => setVisible(true);
 
   const closeMenu = () => setVisible(false);
+
+  const availableOptions = [
+    product?.availableOnline && "Buy Online",
+    product?.ships && "Shipping",
+  ].filter(Boolean);
 
   return (
     <View style={{ flex: 1 }}>
       <Appbar.Header>
         <Appbar.BackAction onPress={() => router.back()} />
-        <Appbar.Content title="Detail" />
+        <Appbar.Content title="Details" />
 
         <Menu
           visible={visible}
@@ -84,9 +92,7 @@ const Detail = () => {
 
           <MultiSelect
             button={
-              <View
-                style={{ flexDirection: "row", gap: 10, paddingHorizontal: 15 }}
-              >
+              <View style={{ flexDirection: "row", gap: 10 }}>
                 <Ionicons name="flag-outline" size={20} />
                 <Text>Report Partner</Text>
               </View>
@@ -98,180 +104,207 @@ const Detail = () => {
           />
         </Menu>
       </Appbar.Header>
-      <ScrollView>
-        <View style={styles.selectedItem}>
-          <Image
-            source={require("../../../../assets/images/product.png")}
-            style={styles.mainImage}
-            resizeMode="cover"
-          />
-        </View>
-        <View style={{ alignItems: "flex-end" }}>
-          <Rating rating={5} textStyle={{ color: "black" }} />
-        </View>
-        <View style={styles.info}>
-          <View style={{}}>
-            <Text style={{ marginBottom: 5 }}>@username</Text>
-            <Text
-              style={{
-                fontSize: 22,
-                fontWeight: "500",
-              }}
-            >
-              Location Name{" "}
-            </Text>
-          </View>
-          <View style={{}}>
-            <View style={{ flexDirection: "row", gap: 5 }}>
-              <Ionicons name="location-outline" />
-              <Text style={{ marginBottom: 5 }}>Yori house, Rivers Street</Text>
-            </View>
-          </View>
-        </View>
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Product Name</Text>
-          <Text style={styles.sectionText}>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-            eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim
-            ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut
-            aliquip ex ea commodo consequat. Duis aute irure dolor in
-            reprehenderit in voluptate velit esse cillum dolore eu
-          </Text>
-          <Text
-            style={[
-              styles.sectionTitle,
-              { marginTop: 10, fontWeight: "bold", fontSize: 20 },
-            ]}
-          >
-            $1500.9
-          </Text>
-        </View>
-        <View style={styles.section}>
-          <View
-            style={[{ flexDirection: "row", gap: 5, alignItems: "center" }]}
-          >
-            <Text style={{}}>Shipping Available</Text>
-            <Ionicons name="checkmark" size={20} />
-          </View>
-          <View
-            style={[{ flexDirection: "row", gap: 5, alignItems: "center" }]}
-          >
-            <Text style={{}}>Pickup</Text>
-            <Ionicons name="checkmark" size={20} />
-          </View>
-        </View>
-        <View style={styles.section}>
-          <View style={{ flexDirection: "row", marginBottom: 10 }}>
-            <Text style={{ flex: 1 }}>Gender:</Text>
-            <Text style={{ flex: 3 }}>Male</Text>
-          </View>
-          <View style={{ flexDirection: "row" }}>
-            <Text style={{ flex: 1 }}>Color:</Text>
-            <Text style={{ flex: 3 }}>White</Text>
-          </View>
-        </View>
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Reviews</Text>
-          {reviews.map((review) => (
-            <View
-              key={review.id}
-              style={{
-                paddingVertical: 15,
-                borderBottomWidth: 1,
-                borderBottomColor: "#e8e8e8",
-              }}
-            >
-              <Rating rating={5} show={false} />
-              <Text
-                style={[
-                  styles.sectionText,
-                  { fontWeight: "500", marginVertical: 3 },
-                ]}
-              >
-                {review.title}
-              </Text>
-              {review.comment && (
-                <Text style={[styles.sectionText, { marginBottom: 8 }]}>
-                  {review.comment}
-                </Text>
-              )}
-              <View style={{ flexDirection: "row", gap: 5, marginBottom: 8 }}>
-                {review.images.map((image, index) => (
-                  <Image
-                    key={index}
-                    source={image}
-                    style={{ width: 50, height: 50, borderRadius: 8 }}
-                    resizeMode="cover"
-                  />
-                ))}
-              </View>
-              <Text style={[styles.sectionText, { fontWeight: "500" }]}>
-                {review.user}
-              </Text>
-              <Text style={styles.sectionText}>{review.date}</Text>
-            </View>
-          ))}
-        </View>
-      </ScrollView>
-      <View style={styles.inputContainer}>
-        {showWebsite ? (
-          <>
-            <Button>View Website</Button>
-            <Text
-              style={{
-                textAlign: "center",
-                color: "#D67732",
-                paddingVertical: 15,
-                fontSize: 16,
-              }}
-            >
-              No payments are made through our platform
-            </Text>
-          </>
-        ) : (
-          <>
-            <View style={[styles.inputCont, { borderColor: colors.primary }]}>
-              <TextInput
-                style={styles.input}
-                onChangeText={(text) => setMessage(text)}
-                value={message || "Hi, is this Product still in stock?"}
-                placeholderTextColor={"gray"}
+      {loading ? (
+        <LoadingOverlay />
+      ) : (
+        <>
+          <ScrollView>
+            <View style={styles.selectedItem}>
+              <Image
+                source={{ uri: imageURL + product?.images[0] }}
+                style={styles.mainImage}
+                resizeMode="cover"
               />
-              <TouchableOpacity
-                style={styles.sendButton}
-                onPress={() => setShowWebsite(true)}
-              >
-                <Ionicons name="send" size={24} color={colors.primary} />
-              </TouchableOpacity>
             </View>
-            {!message && (
-              <View
-                style={{
-                  borderWidth: 1,
-                  borderRadius: 20,
-                  alignSelf: "flex-start",
-                  padding: 5,
-                  marginVertical: 10,
-                  borderColor: "#e1e1e1",
-                }}
-              >
+            <View style={{ alignItems: "flex-end" }}>
+              <Rating
+                rating={product?.rating || 0}
+                textStyle={{ color: "black" }}
+              />
+            </View>
+            <View style={styles.info}>
+              <View style={{}}>
+                <Text style={{ marginBottom: 5 }}>
+                  @{product?.user.username}
+                </Text>
                 <Text
                   style={{
-                    fontSize: 12,
+                    fontSize: 22,
+                    fontWeight: "500",
                   }}
-                  onPress={() =>
-                    setMessage(
-                      "I would like to discuss more about this Product"
-                    )
-                  }
                 >
-                  I would like to discuss more about this Product
+                  {product?.location.map((loc) => loc.locationName).join(", ")}
                 </Text>
               </View>
+              <View style={{}}>
+                <View style={{ flexDirection: "row", gap: 5 }}>
+                  <Ionicons name="location-outline" />
+                  <Text style={{ marginBottom: 5 }}>
+                    {product?.location.map((loc) => loc.address).join(", ")}
+                  </Text>
+                </View>
+              </View>
+            </View>
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>{product?.name}</Text>
+              <Text style={styles.sectionText}>{product?.description}</Text>
+              <Text
+                style={[
+                  styles.sectionTitle,
+                  {
+                    marginTop: 10,
+                    fontWeight: "bold",
+                    fontSize: 20,
+                    marginBottom: 0,
+                  },
+                ]}
+              >
+                ${product?.price}
+              </Text>
+            </View>
+            <View style={styles.section}>
+              {product?.options?.map((option, index) => (
+                <View
+                  key={index}
+                  style={{ flexDirection: "row", marginBottom: 10 }}
+                >
+                  <Text
+                    style={{
+                      flex: 1,
+                      fontWeight: "500",
+                      textTransform: "capitalize",
+                    }}
+                  >
+                    {option.optionCategory}:
+                  </Text>
+                  <Text style={{ flex: 3 }}>{option.optionName}</Text>
+                </View>
+              ))}
+            </View>
+            {availableOptions.length > 0 && (
+              <View
+                style={[
+                  styles.section,
+                  { flexDirection: "row", alignItems: "center", gap: 5 },
+                ]}
+              >
+                <Text style={{ color: "#888" }}>
+                  {availableOptions.join(" + ")}
+                </Text>
+                <Ionicons name="checkmark" size={15} />
+              </View>
             )}
-          </>
-        )}
-      </View>
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>
+                Reviews ({product?.reviews.length})
+              </Text>
+              {product?.reviews &&
+                product.reviews.map((review) => (
+                  <View
+                    key={review._id}
+                    style={{
+                      paddingVertical: 15,
+                      borderBottomWidth: 1,
+                      borderBottomColor: "#e8e8e8",
+                    }}
+                  >
+                    <Rating rating={5} show={false} />
+                    <Text
+                      style={[
+                        styles.sectionText,
+                        { fontWeight: "500", marginVertical: 3 },
+                      ]}
+                    >
+                      {/* {review.title} */}
+                    </Text>
+                    {review.content && (
+                      <Text style={[styles.sectionText, { marginBottom: 8 }]}>
+                        {review.content}
+                      </Text>
+                    )}
+                    <View
+                      style={{ flexDirection: "row", gap: 5, marginBottom: 8 }}
+                    >
+                      {/* {review.images.map((image, index) => (
+                        <Image
+                          key={index}
+                          source={image}
+                          style={{ width: 50, height: 50, borderRadius: 8 }}
+                          resizeMode="cover"
+                        />
+                      ))} */}
+                    </View>
+                    {/* <Text style={[styles.sectionText, { fontWeight: "500" }]}>
+                      {review.user}
+                    </Text>
+                    <Text style={styles.sectionText}>{review.date}</Text> */}
+                  </View>
+                ))}
+            </View>
+          </ScrollView>
+          <View style={styles.inputContainer}>
+            {showWebsite ? (
+              <>
+                <Button>View Website</Button>
+                <Text
+                  style={{
+                    textAlign: "center",
+                    color: "#D67732",
+                    paddingVertical: 15,
+                    fontSize: 16,
+                  }}
+                >
+                  No payments are made through our platform
+                </Text>
+              </>
+            ) : (
+              <>
+                <View
+                  style={[styles.inputCont, { borderColor: colors.primary }]}
+                >
+                  <TextInput
+                    style={styles.input}
+                    onChangeText={(text) => setMessage(text)}
+                    value={message || "Hi, is this Product still in stock?"}
+                    placeholderTextColor={"gray"}
+                  />
+                  <TouchableOpacity
+                    style={styles.sendButton}
+                    onPress={() => setShowWebsite(true)}
+                  >
+                    <Ionicons name="send" size={24} color={colors.primary} />
+                  </TouchableOpacity>
+                </View>
+                {!message && (
+                  <View
+                    style={{
+                      borderWidth: 1,
+                      borderRadius: 20,
+                      alignSelf: "flex-start",
+                      padding: 5,
+                      marginVertical: 10,
+                      borderColor: "#e1e1e1",
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 12,
+                      }}
+                      onPress={() =>
+                        setMessage(
+                          "I would like to discuss more about this Product"
+                        )
+                      }
+                    >
+                      I would like to discuss more about this Product
+                    </Text>
+                  </View>
+                )}
+              </>
+            )}
+          </View>
+        </>
+      )}
     </View>
   );
 };

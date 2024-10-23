@@ -2,9 +2,11 @@
 import Button from "@/src/components/Button";
 import Rating from "@/src/components/Rating";
 import Select from "@/src/components/Select";
+import { useProduct } from "@/src/context/Product";
+import { IProduct } from "@/src/types/product";
 import { Feather, Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   StyleSheet,
@@ -19,6 +21,7 @@ import {
   Appbar,
   Menu,
   useTheme,
+  ActivityIndicator,
 } from "react-native-paper";
 
 const type = [
@@ -30,21 +33,26 @@ const type = [
 
 const LeadsMobile: React.FC = () => {
   const { colors } = useTheme();
+  const { fetchProducts } = useProduct();
+  const [products, setProducts] = useState<IProduct[]>([]);
   const [selected, setSelected] = useState("Products");
-  const [selectedLeadType, setSelectedLeadType] = useState<string | number>(
-    "active"
-  );
-  const [menuVisible, setMenuVisible] = useState(false);
-  const windowWidth = Dimensions.get("window").width;
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  // Sample data for leads
-  const leads = Array(5).fill({
-    name: "Product Name",
-    category: "Clothing",
-    locationName: "Location Name",
-    subCategory: "Shirts",
-    price: "$1500.99",
-  });
+  useEffect(() => {
+    const getProducts = async () => {
+      try {
+        setLoading(true);
+        const result = await fetchProducts({});
+        setProducts(result);
+      } catch (error: any) {
+        setError(error as string);
+      } finally {
+        setLoading(false);
+      }
+    };
+    getProducts();
+  }, [selected]);
 
   return (
     <ScrollView style={styles.container}>
@@ -108,133 +116,163 @@ const LeadsMobile: React.FC = () => {
 
         {/* Leads List */}
         <View style={[styles.scrollView, styles.listContainer]}>
-          {leads.map((lead, index) =>
-            selected === "Products" ? (
-              <TouchableOpacity
-                onPress={() => router.push("/products/id")}
-                key={index}
-                style={[styles.leadCard, styles.mobileCard]}
-              >
-                <View style={styles.cardContent}>
-                  <Text
-                    style={[
-                      styles.username,
-                      { backgroundColor: colors.elevation.level2 },
-                    ]}
-                  >
-                    {lead.name}
-                  </Text>
-                  <View style={{ padding: 10, gap: 15 }}>
-                    <View style={{ flexDirection: "row" }}>
-                      <Text style={styles.title}>Location (s): </Text>
-                      <Text style={{ flex: 2 }}>{lead.locationName}</Text>
-                    </View>
-                    <View style={{ flexDirection: "row" }}>
-                      <Text style={styles.title}>Category: </Text>
-                      <Text style={{ flex: 2 }}>{lead.category}</Text>
-                    </View>
-                    <View style={{ flexDirection: "row" }}>
-                      <Text style={styles.title}>Subcategory:</Text>
-                      <Text style={{ flex: 2 }}>{lead.subCategory}</Text>
-                    </View>
-                    <View style={{ flexDirection: "row" }}>
-                      <Text style={styles.title}>Variant:</Text>
-                      <Text style={{ flex: 2 }}>Male, White</Text>
-                    </View>
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        borderTopWidth: 1,
-                        borderTopColor: "#e1e1e1",
-                        paddingTop: 10,
-                      }}
+          {loading ? (
+            <ActivityIndicator />
+          ) : (
+            products.map((product, index) =>
+              selected === "Products" ? (
+                <TouchableOpacity
+                  onPress={() => router.push(`/products/${product._id}`)}
+                  key={product._id}
+                  style={[styles.leadCard, styles.mobileCard]}
+                >
+                  <View style={styles.cardContent}>
+                    <Text
+                      style={[
+                        styles.username,
+                        { backgroundColor: colors.elevation.level2 },
+                      ]}
                     >
-                      <Text style={{ flex: 1 }}>
-                        <Text style={styles.title}>Price: </Text>
-                        {lead.price}
-                      </Text>
-
+                      {product.name}
+                    </Text>
+                    <View style={{ padding: 10, gap: 15 }}>
+                      <View style={{ flexDirection: "row" }}>
+                        <Text style={styles.title}>Location (s): </Text>
+                        <Text style={{ flex: 2 }}>
+                          {product.location
+                            .map((loc) => loc.locationName)
+                            .join(", ")}
+                        </Text>
+                      </View>
+                      <View style={{ flexDirection: "row" }}>
+                        <Text style={styles.title}>Category: </Text>
+                        <Text style={{ flex: 2 }}>
+                          {product.category.join(", ")}
+                        </Text>
+                      </View>
+                      <View style={{ flexDirection: "row" }}>
+                        <Text style={styles.title}>Subcategory:</Text>
+                        <Text style={{ flex: 2 }}>
+                          {product.subCategory &&
+                            product.subCategory.join(", ")}
+                        </Text>
+                      </View>
+                      <View style={{ flexDirection: "row" }}>
+                        <Text style={styles.title}>Variant:</Text>
+                        <Text style={{ flex: 2 }}>
+                          {product.options
+                            ?.map((option) => option.optionName)
+                            .join(", ")}
+                        </Text>
+                      </View>
                       <View
                         style={{
                           flexDirection: "row",
-                          gap: 10,
-                          flex: 1,
-                          borderLeftWidth: 1,
-                          borderLeftColor: "#e1e1e1",
-                          paddingHorizontal: 30,
+                          borderTopWidth: 1,
+                          borderTopColor: "#e1e1e1",
+                          paddingTop: 10,
                         }}
                       >
-                        <Feather name="link" size={20} color="gray" />
-                        <Feather name="edit" size={20} color="gray" />
-                        <Ionicons name="trash-outline" size={20} color="red" />
+                        <Text style={{ flex: 1 }}>
+                          <Text style={styles.title}>Price: </Text>
+                          {product.price}
+                        </Text>
+
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            gap: 10,
+                            flex: 1,
+                            borderLeftWidth: 1,
+                            borderLeftColor: "#e1e1e1",
+                            paddingHorizontal: 30,
+                          }}
+                        >
+                          <Feather name="link" size={20} color="gray" />
+                          <Feather
+                            name="edit"
+                            size={20}
+                            color="gray"
+                            onPress={() => router.push("/products/add")}
+                          />
+                          <Ionicons
+                            name="trash-outline"
+                            size={20}
+                            color="red"
+                          />
+                        </View>
+                      </View>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              ) : (
+                <View key={index} style={[styles.leadCard, styles.mobileCard]}>
+                  <View style={styles.cardContent}>
+                    <Text
+                      style={[
+                        styles.username,
+                        { backgroundColor: colors.elevation.level2 },
+                      ]}
+                    >
+                      {product.name}
+                    </Text>
+                    <View style={{ padding: 10, gap: 15 }}>
+                      <View style={{ flexDirection: "row" }}>
+                        <Text style={styles.title}>Variants: </Text>
+                        <Text style={{ flex: 2, paddingLeft: 20 }}>
+                          {product.options
+                            ?.map((option) => option.optionName)
+                            .join(", ")}
+                        </Text>
+                      </View>
+                      <View style={{ flexDirection: "row" }}>
+                        <Text style={styles.title}>Customer Name: </Text>
+                        <Text style={{ flex: 2, paddingLeft: 20 }}>
+                          Customer Name
+                        </Text>
+                      </View>
+                      <View style={{ flexDirection: "row" }}>
+                        <Text style={styles.title}>Purchase Date:</Text>
+                        <Text style={{ flex: 2, paddingLeft: 20 }}>
+                          MM/DD/YY
+                        </Text>
+                      </View>
+                      <View style={{ flexDirection: "row" }}>
+                        <Text style={styles.title}>Description:</Text>
+                        <Text style={{ flex: 2, paddingLeft: 20 }}>
+                          Lorem iudgh jif ess hg...
+                        </Text>
+                      </View>
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          borderTopWidth: 1,
+                          borderTopColor: "#e1e1e1",
+                          paddingTop: 10,
+                        }}
+                      >
+                        <Text style={{ flex: 1 }}>
+                          <Text style={styles.title}>Price: </Text>
+                          {product.price}
+                        </Text>
+
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            gap: 10,
+                            flex: 1,
+                            borderLeftWidth: 1,
+                            borderLeftColor: "#e1e1e1",
+                            paddingHorizontal: 30,
+                          }}
+                        >
+                          <Rating rating={product.rating} show={false} />
+                        </View>
                       </View>
                     </View>
                   </View>
                 </View>
-              </TouchableOpacity>
-            ) : (
-              <View key={index} style={[styles.leadCard, styles.mobileCard]}>
-                <View style={styles.cardContent}>
-                  <Text
-                    style={[
-                      styles.username,
-                      { backgroundColor: colors.elevation.level2 },
-                    ]}
-                  >
-                    {lead.name}
-                  </Text>
-                  <View style={{ padding: 10, gap: 15 }}>
-                    <View style={{ flexDirection: "row" }}>
-                      <Text style={styles.title}>Variants: </Text>
-                      <Text style={{ flex: 2, paddingLeft: 20 }}>
-                        Male, White
-                      </Text>
-                    </View>
-                    <View style={{ flexDirection: "row" }}>
-                      <Text style={styles.title}>Customer Name: </Text>
-                      <Text style={{ flex: 2, paddingLeft: 20 }}>
-                        Customer Name
-                      </Text>
-                    </View>
-                    <View style={{ flexDirection: "row" }}>
-                      <Text style={styles.title}>Purchase Date:</Text>
-                      <Text style={{ flex: 2, paddingLeft: 20 }}>MM/DD/YY</Text>
-                    </View>
-                    <View style={{ flexDirection: "row" }}>
-                      <Text style={styles.title}>Description:</Text>
-                      <Text style={{ flex: 2, paddingLeft: 20 }}>
-                        Lorem iudgh jif ess hg...
-                      </Text>
-                    </View>
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        borderTopWidth: 1,
-                        borderTopColor: "#e1e1e1",
-                        paddingTop: 10,
-                      }}
-                    >
-                      <Text style={{ flex: 1 }}>
-                        <Text style={styles.title}>Price: </Text>
-                        {lead.price}
-                      </Text>
-
-                      <View
-                        style={{
-                          flexDirection: "row",
-                          gap: 10,
-                          flex: 1,
-                          borderLeftWidth: 1,
-                          borderLeftColor: "#e1e1e1",
-                          paddingHorizontal: 30,
-                        }}
-                      >
-                        <Rating rating={5} show={false} />
-                      </View>
-                    </View>
-                  </View>
-                </View>
-              </View>
+              )
             )
           )}
         </View>

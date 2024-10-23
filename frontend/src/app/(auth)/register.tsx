@@ -73,7 +73,7 @@ const Register = () => {
   const handleInputChange = (name: string, value: string | boolean) => {
     setFormData({ ...formData, [name]: value });
   };
-  console.log(formData.role);
+
   const validateForm = () => {
     const newErrors: any = {};
     if (currentTab === "User") {
@@ -120,7 +120,7 @@ const Register = () => {
           });
           setErrors(errorObj);
         } else {
-          setErrors((prev) => ({ ...prev, general: error.message }));
+          setErrors((prev) => ({ ...prev, general: error }));
         }
       } finally {
         setLoading(false);
@@ -362,6 +362,14 @@ const Register = () => {
               value={formData.confirmPassword}
               error={errors.confirmPassword}
             />
+            {!!errors.checked && (
+              <Text style={[styles.error]}>{errors.checked}</Text>
+            )}
+            {!!errors.general && (
+              <Text style={[styles.error, { marginTop: 0 }]}>
+                {errors.general}
+              </Text>
+            )}
             <View style={styles.checkboxContainer}>
               <Checkbox.Android
                 status={formData.checked ? "checked" : "unchecked"}
@@ -511,5 +519,10 @@ const styles = StyleSheet.create({
   },
   selectContainerStyle: {
     marginBottom: 20,
+  },
+  error: {
+    color: "red",
+    marginTop: -20,
+    fontSize: 14,
   },
 });

@@ -17,17 +17,19 @@ interface UserBase extends Document {
   city: string;
   state: string;
   avatarUrl?: string;
-  verificationCode?: string; // Field to store the verification code
+  verificationCode?: string;
   verificationCodeExpires?: Date;
-  isVerified: boolean; // Field to check if the user is verified
+  isVerified: boolean;
+  follower: Schema.Types.ObjectId[];
+  following: Schema.Types.ObjectId[];
 }
 
 // Customer-specific fields
 interface Customer extends UserBase {
-  followingStores: Schema.Types.ObjectId[]; // Stores the customer follows
-  likedProducts: Schema.Types.ObjectId[]; // Liked products/services
-  reportedStores: Schema.Types.ObjectId[]; // Reported stores
-  reportedProducts: Schema.Types.ObjectId[]; // Reported products/services
+  followingStores: Schema.Types.ObjectId[];
+  likedProducts: Schema.Types.ObjectId[];
+  reportedStores: Schema.Types.ObjectId[];
+  reportedProducts: Schema.Types.ObjectId[];
 }
 
 // Partner-specific fields
@@ -36,7 +38,7 @@ interface Partner extends UserBase {
   businessAddress: string;
   suite: string;
   zipCode: string;
-  businessType: string; // "products", "services", "products & services"
+  businessType: string;
   einSsn: string;
   products: Schema.Types.ObjectId[];
   services: Schema.Types.ObjectId[];
@@ -57,16 +59,18 @@ const UserSchema = new Schema<UserBase | Customer | Partner>(
     avatarUrl: {
       type: String,
       default:
-        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQttE9sxpEu1EoZgU2lUF_HtygNLCaz2rZYHg&s",
+        "06450da9-903c-46ca-abd0-59864e8dc266_1729665407294-586722170.jpg",
     }, // Optional profile picture
     verificationCode: { type: String }, // Field to store the verification code
     verificationCodeExpires: { type: Date }, // New field for expiration
     isVerified: { type: Boolean, default: false },
+    follower: [{ type: Schema.Types.ObjectId, ref: "User" }],
+    following: [{ type: Schema.Types.ObjectId, ref: "User" }],
 
     // Customer-specific fields
-    followingStores: [{ type: Schema.Types.ObjectId, ref: "Store" }],
+    followingStores: [{ type: Schema.Types.ObjectId, ref: "Location" }],
     likedProducts: [{ type: Schema.Types.ObjectId, ref: "Product" }],
-    reportedStores: [{ type: Schema.Types.ObjectId, ref: "Store" }],
+    reportedStores: [{ type: Schema.Types.ObjectId, ref: "Location" }],
     reportedProducts: [{ type: Schema.Types.ObjectId, ref: "Product" }],
 
     // Partner-specific fields

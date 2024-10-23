@@ -1,189 +1,90 @@
 import { Ionicons } from "@expo/vector-icons";
-import React from "react";
-import {
-  View,
-  Text,
-  FlatList,
-  Image,
-  StyleSheet,
-  SafeAreaView,
-} from "react-native";
-import { List } from "react-native-paper";
+import React, { useState } from "react";
+import { View, Text, FlatList, Image, StyleSheet } from "react-native";
+import { ActivityIndicator, List } from "react-native-paper";
 import Rating from "../../Rating";
+import { Location } from "@/src/types/location";
+import { IProduct } from "@/src/types/product";
+import { IService } from "@/src/types/service";
+import { imageURL } from "@/src/services/api";
+import moment from "moment";
 
-type Item = {
-  id: string;
-  name: string;
-  price: string;
-  image: any;
-};
-
-const products: Item[] = [
-  {
-    id: "1",
-    name: "Product Name",
-    price: "$10.99",
-    image: require("../../../../assets/images/product.png"),
-  },
-  {
-    id: "2",
-    name: "Product Name",
-    price: "$10.99",
-    image: require("../../../../assets/images/product.png"),
-  },
-  {
-    id: "3",
-    name: "Product Name",
-    price: "$10.99",
-    image: require("../../../../assets/images/product.png"),
-  },
-  {
-    id: "4",
-    name: "Product Name",
-    price: "$10.99",
-    image: require("../../../../assets/images/product.png"),
-  },
-];
-
-const services: Item[] = [
-  {
-    id: "1",
-    name: "Service Name",
-    price: "$10.99",
-    image: require("../../../../assets/images/product.png"),
-  },
-  {
-    id: "2",
-    name: "Service Name",
-    price: "$10.99",
-    image: require("../../../../assets/images/product.png"),
-  },
-  {
-    id: "3",
-    name: "Service Name",
-    price: "$10.99",
-    image: require("../../../../assets/images/product.png"),
-  },
-  {
-    id: "4",
-    name: "Service Name",
-    price: "$10.99",
-    image: require("../../../../assets/images/product.png"),
-  },
-];
-
-const reviews = [
-  {
-    id: 1,
-    title: "Product title",
-    rating: 5,
-    comment:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed doeiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut",
-    images: [],
-    user: "Daniel Wilson",
-    date: "07-07-24",
-  },
-  {
-    id: 2,
-    title: "Product title",
-    rating: 5,
-    comment: "",
-    images: [],
-    user: "Daniel Wilson",
-    date: "07-07-24",
-  },
-  {
-    id: 3,
-    title: "Product title",
-    rating: 5,
-    comment: "",
-    images: [
-      require("../../../../assets/images/product.png"),
-      require("../../../../assets/images/product.png"),
-      require("../../../../assets/images/product.png"),
-    ],
-    user: "Daniel Wilson",
-    date: "07-07-24",
-  },
-  {
-    id: 4,
-    title: "Product title",
-    rating: 5,
-    comment:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed doeiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam",
-    images: [
-      require("../../../../assets/images/product.png"),
-      require("../../../../assets/images/product.png"),
-      require("../../../../assets/images/product.png"),
-    ],
-    user: "Daniel Wilson",
-    date: "07-07-24",
-  },
-];
-
-// Product or Service Card Component
-const Card: React.FC<{ item: Item }> = ({ item }) => (
-  <View style={styles.card}>
-    <Image source={item.image} style={styles.image} />
-    <Text style={styles.name}>{item.name}</Text>
-    <Text style={styles.price}>{item.price}</Text>
-  </View>
-);
-
+interface Props {
+  location: Location | null;
+  products: { loading: boolean; products: IProduct[] };
+  services: { loading: boolean; services: IService[] };
+}
 // Location Screen Component
-const Info: React.FC = () => {
-  const renderItem = ({ item }: { item: Item }) => <Card item={item} />;
+const Info: React.FC<Props> = ({ location, products, services }) => {
+  const renderItem = ({ item }: { item: any }) => (
+    <View style={styles.card}>
+      <Image source={{ uri: imageURL + item.images[0] }} style={styles.image} />
+      <Text style={styles.name}>{item.name}</Text>
+      <Text style={styles.price}>
+        {item.priceType === "range"
+          ? `$${item?.priceRange?.from} - $${item?.priceRange?.to}`
+          : `$${item.price}`}
+      </Text>
+    </View>
+  );
 
   return (
     <View style={styles.container}>
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Location Description</Text>
-        <Text style={styles.sectionText}>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-          eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad
-          minim veniam, quis nostrud exercitation ullamco laboris nisi ut
-          aliquip ex ea commodo consequat. Duis aute irure dolor in
-          reprehenderit in voluptate velit esse cillum dolore eu
-        </Text>
+        <Text style={styles.sectionText}>{location?.description}</Text>
       </View>
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Retail</Text>
         <Text style={styles.sectionText}>
-          Appliances, Bed & Bath, Books, Clothing & Apparel - Kids
+          {location?.categories.join(", ")}
         </Text>
       </View>
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Top Products</Text>
-        <FlatList
-          data={products}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.id}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-        />
+        {products.loading ? (
+          <ActivityIndicator />
+        ) : products.products.length <= 0 ? (
+          <Text>No Products Available</Text>
+        ) : (
+          <FlatList
+            data={products.products}
+            renderItem={renderItem}
+            keyExtractor={(item) => item._id}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+          />
+        )}
       </View>
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Top Services</Text>
-        <FlatList
-          data={services}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.id}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-        />
+        {services.loading ? (
+          <ActivityIndicator />
+        ) : services.services.length <= 0 ? (
+          <Text>No Products Available</Text>
+        ) : (
+          <FlatList
+            data={services.services}
+            renderItem={renderItem}
+            keyExtractor={(item) => item._id}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+          />
+        )}
       </View>
       <Image
         source={require("../../../../assets/images/map.png")}
         style={styles.mapImage}
         resizeMode="cover"
       />
+
       <View style={[styles.section, { paddingVertical: 10 }]}>
         <List.Item
           title="15mins Drive from your location"
-          description="Yori house, Rivers Street"
+          description={location?.address}
           left={(props) => <Ionicons name="location-outline" size={20} />}
           right={(props) => <Ionicons size={30} name="map-outline" />}
           titleStyle={{ fontWeight: "600", marginBottom: 5 }}
@@ -192,51 +93,62 @@ const Info: React.FC = () => {
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Opening hours</Text>
-        <Text style={styles.sectionText}>Monday - Friday 8AM - 5PM</Text>
-        <Text style={styles.sectionText}>Saturday - Sunday Closed</Text>
+        {location?.hoursOfOperation.map((time) => (
+          <Text key={time.day} style={styles.sectionText}>
+            <View style={{ width: 100 }}>
+              <Text style={{}}>{time.day} </Text>
+            </View>
+            <Text style={{}}>
+              {time.isOpen ? `${time.openTime} - ${time.closeTime}` : "Closed"}
+            </Text>
+          </Text>
+        ))}
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Reviewa (4.9/5)</Text>
-        {reviews.map((review) => (
-          <View
-            key={review.id}
-            style={{
-              paddingVertical: 15,
-              borderBottomWidth: 1,
-              borderBottomColor: "#e8e8e8",
-            }}
-          >
-            <Rating rating={5} show={false} />
-            <Text
-              style={[
-                styles.sectionText,
-                { fontWeight: "500", marginVertical: 3 },
-              ]}
+        <Text style={styles.sectionTitle}>
+          Reviews ({location?.reviews.length})
+        </Text>
+
+        {location?.reviews && location.reviews.length <= 0 ? (
+          <Text>No review</Text>
+        ) : (
+          location?.reviews.map((review) => (
+            <View
+              key={review._id}
+              style={{
+                paddingVertical: 15,
+                borderBottomWidth: 1,
+                borderBottomColor: "#e8e8e8",
+              }}
             >
-              {review.title}
-            </Text>
-            {review.comment && (
-              <Text style={[styles.sectionText, { marginBottom: 8 }]}>
-                {review.comment}
+              <Rating rating={review.rating} show={false} />
+              {review?.content && (
+                <Text style={[styles.sectionText, { marginBottom: 8 }]}>
+                  {review?.content}
+                </Text>
+              )}
+              {review.images && review.images.length > 0 && (
+                <View style={{ flexDirection: "row", gap: 5, marginBottom: 8 }}>
+                  {review?.images.map((image, index) => (
+                    <Image
+                      key={index}
+                      source={{ uri: imageURL + image }}
+                      style={{ width: 50, height: 50, borderRadius: 8 }}
+                      resizeMode="cover"
+                    />
+                  ))}
+                </View>
+              )}
+              <Text style={[styles.sectionText, { fontWeight: "500" }]}>
+                {review.userId.username}
               </Text>
-            )}
-            <View style={{ flexDirection: "row", gap: 5, marginBottom: 8 }}>
-              {review.images.map((image, index) => (
-                <Image
-                  key={index}
-                  source={image}
-                  style={{ width: 50, height: 50, borderRadius: 8 }}
-                  resizeMode="cover"
-                />
-              ))}
+              <Text style={styles.sectionText}>
+                {moment(review.createdAt).calendar()}
+              </Text>
             </View>
-            <Text style={[styles.sectionText, { fontWeight: "500" }]}>
-              {review.user}
-            </Text>
-            <Text style={styles.sectionText}>{review.date}</Text>
-          </View>
-        ))}
+          ))
+        )}
       </View>
     </View>
   );

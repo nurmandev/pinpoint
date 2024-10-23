@@ -5,6 +5,7 @@ import {
   getLocationById,
   updateLocation,
   deleteLocation,
+  getNearbyLocations,
 } from "../controllers/location";
 import { auth } from "../middleware/auth";
 import multer from "multer";
@@ -33,6 +34,8 @@ router.post("/", upload.array("media"), auth(), createLocation);
 
 // Get all locations
 router.get("/user", auth(), getUserAllLocations);
+
+router.get("/nearby", auth(), getNearbyLocations);
 
 // Get a location by ID
 router.get("/:id", getLocationById);

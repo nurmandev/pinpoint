@@ -1,37 +1,43 @@
 // LeadsMobile.tsx
 import Select from "@/src/components/Select";
+import { useLead } from "@/src/context/Lead";
+import { useToastNotification } from "@/src/context/ToastNotificationContext";
 import { router } from "expo-router";
-import React, { useState } from "react";
+import moment from "moment";
+import React, { useEffect, useState } from "react";
+import { View, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import {
-  View,
-  StyleSheet,
-  ScrollView,
-  Dimensions,
-  TouchableOpacity,
-} from "react-native";
-import { Text, TextInput, useTheme } from "react-native-paper";
+  ActivityIndicator,
+  Text,
+  TextInput,
+  useTheme,
+} from "react-native-paper";
 
 const type = [
-  { label: "Active Leads", value: "active" },
-  { label: "Pending Leads", value: "pending" },
-  { label: "Leads Pool", value: "pool" },
-  { label: "Completed Leads", value: "completed" },
+  { label: "Active Leads", value: "Active" },
+  { label: "Pending Leads", value: "Pending" },
+  { label: "Leads Pool", value: "Pool" },
+  { label: "Completed Leads", value: "Completed" },
 ];
 
 const LeadsMobile: React.FC = () => {
   const { colors } = useTheme();
-  const [selectedLeadType, setSelectedLeadType] = useState<string | number>(
-    "active"
-  );
+  const { leads, fetchPartnerLeads, loading } = useLead();
+  const { addNotification } = useToastNotification();
+  const [selectedLeadType, setSelectedLeadType] = useState<string>("Active");
 
-  // Sample data for leads
-  const leads = Array(5).fill({
-    username: "Username Name",
-    serviceName: "Service Name",
-    locationName: "Location Name",
-    date: "MM/DD/YYYY, 09:00 AM",
-    price: "$1500.99",
-  });
+  useEffect(() => {
+    const fetchLLeads = async () => {
+      try {
+        await fetchPartnerLeads(
+          selectedLeadType === "Completed" ? "Complete" : selectedLeadType
+        );
+      } catch (error: any) {
+        addNotification(error);
+      }
+    };
+    fetchLLeads();
+  }, [selectedLeadType]);
 
   return (
     <ScrollView style={styles.container}>
@@ -39,7 +45,7 @@ const LeadsMobile: React.FC = () => {
         {/* Dropdown Menu */}
         <Select
           selectedValue={selectedLeadType}
-          onValueChange={(value) => setSelectedLeadType(value)}
+          onValueChange={(value) => setSelectedLeadType(value as string)}
           options={type}
           containerStyle={{
             backgroundColor: colors.elevation.level2,
@@ -60,60 +66,82 @@ const LeadsMobile: React.FC = () => {
 
         {/* Leads List */}
         <View style={[styles.scrollView, styles.listContainer]}>
-          {leads.map((lead, index) => (
-            <TouchableOpacity
-              onPress={() => router.push("/leads/id")}
-              key={index}
-              style={[
-                styles.leadCard,
-                styles.mobileCard,
-                { borderColor: colors.elevation.level5 },
-              ]}
-            >
-              <View style={styles.cardContent}>
-                <Text
-                  style={[
-                    styles.username,
-                    { backgroundColor: colors.elevation.level2 },
-                  ]}
-                >
-                  {lead.username}
-                </Text>
-                <View style={{ padding: 10, gap: 15 }}>
-                  <Text>
-                    <Text style={styles.title}>Service Name: </Text>
-                    {lead.serviceName}
-                  </Text>
-                  <Text>
-                    <Text style={styles.title}>Location Name: </Text>
-                    {lead.locationName}
-                  </Text>
-                  <Text>
-                    <Text style={styles.title}>Date & Time: </Text>
-                    {lead.date}
-                  </Text>
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      borderTopWidth: 1,
-                      borderTopColor: "#e1e1e1",
-                      paddingTop: 10,
-                    }}
+          {loading ? (
+            <ActivityIndicator />
+          ) : leads.length <= 0 ? (
+            <Text>No {selectedLeadType} Lead</Text>
+          ) : (
+            leads.map((lead) => (
+              <TouchableOpacity
+                onPress={() => router.push(`/leads/${lead._id}`)}
+                key={lead._id}
+                style={[
+                  styles.leadCard,
+                  styles.mobileCard,
+                  { borderColor: colors.elevation.level5 },
+                ]}
+              >
+                <View style={styles.cardContent}>
+                  <Text
+                    style={[
+                      styles.username,
+                      { backgroundColor: colors.elevation.level2 },
+                    ]}
                   >
-                    <Text style={{ flex: 1 }}>
-                      <Text style={styles.title}>Price: </Text>
-                      {lead.price}
+                    {lead.customerName}
+                  </Text>
+                  <View style={{ padding: 10, gap: 15 }}>
+                    <Text>
+                      <Text style={styles.title}>Service Name: </Text>
+                      {lead.service.name}
+                    </Text>
+                    <Text>
+                      <Text style={styles.title}>Location Name: </Text>
+                      {lead.location.locationName}
+                    </Text>
+                    <Text>
+                      <Text style={styles.title}>Date & Time: </Text>
+                      {moment(lead.createdAt).calendar()}
                     </Text>
 
-                    <Text style={{ color: "red", flex: 1 }}>
-                      <Text style={styles.title}>Urgency: </Text>
-                      Important
-                    </Text>
+                    {lead.status === "Complete" && (
+                      <Text>
+                        <Text style={styles.title}>Date Complete: </Text>
+                        {moment(lead.dateCompleted).calendar()}
+                      </Text>
+                    )}
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        borderTopWidth: 1,
+                        borderTopColor: "#e1e1e1",
+                        paddingTop: 10,
+                      }}
+                    >
+                      <Text style={{ flex: 1 }}>
+                        <Text style={styles.title}>Price: </Text>
+                        {lead.service?.priceType === "flat"
+                          ? `$${lead.service?.price}`
+                          : `$${lead.service?.priceRange?.from} - $${lead.service?.priceRange?.to}`}
+                      </Text>
+
+                      {lead.status === "Pending" && (
+                        <Text style={{ color: "red", flex: 1 }}>
+                          <Text style={styles.title}>Urgency: </Text>
+                          Important
+                        </Text>
+                      )}
+                      {lead.status === "Complete" && (
+                        <Text style={{ color: "red", flex: 1 }}>
+                          {lead.reason}
+                        </Text>
+                      )}
+                    </View>
                   </View>
                 </View>
-              </View>
-            </TouchableOpacity>
-          ))}
+              </TouchableOpacity>
+            ))
+          )}
         </View>
       </View>
     </ScrollView>

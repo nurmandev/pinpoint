@@ -7,12 +7,13 @@ import {
 } from "@gorhom/bottom-sheet";
 
 type BottomSheetComponentProps = {
-  content: ReactNode;
+  content: (close: () => void) => ReactNode;
   snapPoints?: string[];
   button: ReactNode;
   actionButtonStyle?: object;
   contentContainerStyle?: object;
   onOpen?: () => void;
+  onClose?: () => void;
 };
 
 const BottomSheetComponent: React.FC<BottomSheetComponentProps> = ({
@@ -22,6 +23,7 @@ const BottomSheetComponent: React.FC<BottomSheetComponentProps> = ({
   actionButtonStyle,
   contentContainerStyle,
   onOpen,
+  onClose,
 }) => {
   const bottomSheetRef = useRef<BottomSheetModal>(null);
 
@@ -30,6 +32,15 @@ const BottomSheetComponent: React.FC<BottomSheetComponentProps> = ({
       bottomSheetRef.current?.present();
       if (onOpen) {
         onOpen();
+      }
+    }
+  };
+
+  const close = () => {
+    if (bottomSheetRef) {
+      bottomSheetRef.current?.dismiss();
+      if (onClose) {
+        onClose();
       }
     }
   };
@@ -56,7 +67,8 @@ const BottomSheetComponent: React.FC<BottomSheetComponentProps> = ({
         <BottomSheetView
           style={[styles.contentContainer, contentContainerStyle]}
         >
-          {content}
+          {content(close)}
+          {/* Call the content function with the close function */}
         </BottomSheetView>
       </BottomSheetModal>
     </>

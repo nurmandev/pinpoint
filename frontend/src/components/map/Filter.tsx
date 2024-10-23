@@ -71,10 +71,10 @@ const Filter: React.FC = () => {
         </View>
         <View style={styles.addressCont}>
           <Ionicons name="location-outline" size={18} />
-          <Text>Yori house, Rivers Street</Text>
+          <Text>My Location</Text>
         </View>
         <MultiSelect
-          placeholder="Products or Services"
+          placeholder="Business Type"
           selectedValues={selectedTypeValues}
           onValuesChange={(values) => setSelectedTypeValues(values)}
           options={[
@@ -100,13 +100,13 @@ const Filter: React.FC = () => {
           }))}
           containerStyle={styles.selectContainer}
         />
-        <MultiSelect
+        {/* <MultiSelect
           placeholder="Select details..."
           selectedValues={selectedDetailValues}
           onValuesChange={(values) => setSelectedDetailValues(values)}
           options={selectedTypeOptions}
           containerStyle={styles.selectContainer}
-        />
+        /> */}
       </ScrollView>
       <Button>Show Result - 13 Locations</Button>
     </View>

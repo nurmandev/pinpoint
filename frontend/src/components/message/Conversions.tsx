@@ -7,17 +7,34 @@ import {
   Platform,
   Pressable,
 } from "react-native";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Appbar, TextInput, useTheme } from "react-native-paper";
 import { router } from "expo-router";
 import useDimensions from "@/src/hooks/useDimension";
+import { useMessage } from "@/src/context/Message";
+import { imageURL } from "@/src/services/api";
+import { IConversation } from "@/src/types/message";
 
-interface Props {
-  handlePress: (id: string) => void;
-}
-const Conversions: React.FC<Props> = ({ handlePress }) => {
+interface Props {}
+const Conversions: React.FC<Props> = () => {
   const { colors } = useTheme();
   const { isMobile, height } = useDimensions();
+  const { setCurrentConversation, getConversations } = useMessage();
+  const [conversations, setConversations] = useState<IConversation[]>([]);
+  const [leadConversation, setLeadConversation] = useState<IConversation[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    //add loading state
+    getConversations("Chat").then((res) => {
+      setConversations(res);
+      setLoading(false);
+    });
+
+    getConversations("Lead").then((res) => {
+      setLeadConversation(res);
+    });
+  }, []);
 
   const rendereHeader = () => (
     <>
@@ -34,17 +51,23 @@ const Conversions: React.FC<Props> = ({ handlePress }) => {
         />
         <Text style={styles.subHeading}>Leads</Text>
         <FlatList
-          data={["1", "2", "3", "4", "5"]}
-          renderItem={() => (
-            <View style={styles.leaditem}>
+          data={leadConversation}
+          renderItem={({ item }) => (
+            <Pressable
+              onPress={() => {
+                setCurrentConversation(item);
+                router.push(`/inquiry/chat`);
+              }}
+              style={styles.leaditem}
+            >
               <Image
-                source={require("../../../assets/images/feeds/feed2.png")}
+                source={{ uri: imageURL + item?.otherUser?.image }}
                 style={styles.storyImage}
               />
-              <Text style={styles.leadText}>James</Text>
-            </View>
+              <Text style={styles.leadText}>{item?.otherUser?.username}</Text>
+            </Pressable>
           )}
-          keyExtractor={(Item) => Item}
+          keyExtractor={(Item) => Item._id.toString()}
           horizontal
           showsHorizontalScrollIndicator={false}
         />
@@ -52,6 +75,9 @@ const Conversions: React.FC<Props> = ({ handlePress }) => {
       <View style={{ padding: 15 }}>
         <Text style={styles.subHeading}>Conversations</Text>
       </View>
+      {conversations.length <= 0 && (
+        <Text style={{ padding: 20 }}>No Conversation</Text>
+      )}
     </>
   );
   return (
@@ -62,32 +88,27 @@ const Conversions: React.FC<Props> = ({ handlePress }) => {
         )}
         <Appbar.Content title="Messages" />
       </Appbar.Header>
-
       <FlatList
-        data={["1", "2", "3", "4", "5"]}
+        data={conversations}
         ListHeaderComponent={rendereHeader}
-        renderItem={() => (
+        renderItem={({ item }) => (
           <Pressable
-            onPress={() => handlePress("1")}
+            onPress={() => setCurrentConversation(item)}
             style={styles.conversation}
           >
             <Image
-              source={require("../../../assets/images/feeds/feed2.png")}
+              source={{ uri: imageURL + item?.otherUser?.image }}
               style={styles.storyImage}
             />
             <View style={{ flex: 1 }}>
               <Text style={[styles.leadText, { color: colors.primary }]}>
-                James
+                {item?.otherUser?.username}
               </Text>
-              <Text style={{}}>
-                Lorem ipsum dolor sit amet, consectetur adipird elit, sed do
-                eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
-                enim ad minim{" "}
-              </Text>
+              <Text style={{}}>{item.lastMessage.content}</Text>
             </View>
           </Pressable>
         )}
-        keyExtractor={(Item) => Item}
+        keyExtractor={(Item) => Item._id.toString()}
         contentContainerStyle={{ gap: 10 }}
         scrollEnabled
         showsVerticalScrollIndicator={false}

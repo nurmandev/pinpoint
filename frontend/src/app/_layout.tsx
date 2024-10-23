@@ -19,6 +19,16 @@ import { UserProvider } from "../context/User";
 import { PostProvider } from "../context/Post";
 import { LocationProvider } from "../context/Location";
 import { StoryProvider } from "../context/Story";
+import { ProductProvider } from "../context/Product";
+import { ServiceProvider } from "../context/Service";
+import ToastNotification from "../components/ToastNotification";
+import { ToastNotificationProvider } from "../context/ToastNotificationContext";
+import MessageProvider from "../context/Message";
+import "react-native-get-random-values";
+import { LeadProvider } from "../context/Lead";
+// import Geolocation from "@react-native-community/geolocation";
+// import Geolocation from "react-native-geolocation-service";
+// Geolocation.get=CurrentPosition((info) => console.log(info));
 
 const { LightTheme } = adaptNavigationTheme({
   reactNavigationLight: NavigationDefaultTheme,
@@ -44,34 +54,47 @@ interface TextWithDefaultProps extends Text {
 export default function Root() {
   return (
     <UserProvider>
-      <AuthProvider>
-        <PostProvider>
-          <LocationProvider>
-            <StoryProvider>
-              <PaperProvider theme={CombinedDefaultTheme}>
-                <ThemeProvider value={CombinedDefaultTheme}>
-                  <KeyboardAvoidingView
-                    behavior={Platform.OS === "ios" ? "padding" : "height"}
-                    style={{ flex: 1 }}
-                  >
-                    <GestureHandlerRootView style={{ flex: 1 }}>
-                      <BottomSheetModalProvider>
-                        <StatusBar style="dark" />
-                        <Stack screenOptions={{ headerShown: false }}>
-                          <Stack.Screen name="(protected)" />
-                          <Stack.Screen name="(auth)" />
-                          <Stack.Screen name="terms" />
-                          <Stack.Screen name="privacy" />
-                        </Stack>
-                      </BottomSheetModalProvider>
-                    </GestureHandlerRootView>
-                  </KeyboardAvoidingView>
-                </ThemeProvider>
-              </PaperProvider>
-            </StoryProvider>
-          </LocationProvider>
-        </PostProvider>
-      </AuthProvider>
+      <ToastNotificationProvider>
+        <AuthProvider>
+          <PostProvider>
+            <LocationProvider>
+              <StoryProvider>
+                <ProductProvider>
+                  <ServiceProvider>
+                    <PaperProvider theme={CombinedDefaultTheme}>
+                      <ThemeProvider value={CombinedDefaultTheme}>
+                        <MessageProvider>
+                          <LeadProvider>
+                            <KeyboardAvoidingView
+                              behavior={
+                                Platform.OS === "ios" ? "padding" : "height"
+                              }
+                              style={{ flex: 1 }}
+                            >
+                              <GestureHandlerRootView style={{ flex: 1 }}>
+                                <BottomSheetModalProvider>
+                                  <StatusBar style="dark" />
+                                  <ToastNotification />
+                                  <Stack screenOptions={{ headerShown: false }}>
+                                    <Stack.Screen name="(protected)" />
+                                    <Stack.Screen name="(auth)" />
+                                    <Stack.Screen name="terms" />
+                                    <Stack.Screen name="privacy" />
+                                  </Stack>
+                                </BottomSheetModalProvider>
+                              </GestureHandlerRootView>
+                            </KeyboardAvoidingView>
+                          </LeadProvider>
+                        </MessageProvider>
+                      </ThemeProvider>
+                    </PaperProvider>
+                  </ServiceProvider>
+                </ProductProvider>
+              </StoryProvider>
+            </LocationProvider>
+          </PostProvider>
+        </AuthProvider>
+      </ToastNotificationProvider>
     </UserProvider>
   );
 }

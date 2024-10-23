@@ -1,18 +1,13 @@
 // LeadsMobile.tsx
 import Button from "@/src/components/Button";
 import Rating from "@/src/components/Rating";
-import Select from "@/src/components/Select";
+import { useService } from "@/src/context/Service";
+import { IService } from "@/src/types/service";
 import { Feather, Ionicons } from "@expo/vector-icons";
-import React, { useState } from "react";
+import { router } from "expo-router";
+import React, { useEffect, useState } from "react";
 import { View, StyleSheet, ScrollView, Dimensions } from "react-native";
-import {
-  Card,
-  Text,
-  TextInput,
-  Appbar,
-  Menu,
-  useTheme,
-} from "react-native-paper";
+import { Text, TextInput, useTheme } from "react-native-paper";
 
 const type = [
   { label: "Active Leads", value: "active" },
@@ -23,21 +18,26 @@ const type = [
 
 const LeadsMobile: React.FC = () => {
   const { colors } = useTheme();
+  const { fetchServices } = useService();
+  const [services, setProducts] = useState<IService[]>([]);
   const [selected, setSelected] = useState("Service");
-  const [selectedLeadType, setSelectedLeadType] = useState<string | number>(
-    "active"
-  );
-  const [menuVisible, setMenuVisible] = useState(false);
-  const windowWidth = Dimensions.get("window").width;
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  // Sample data for leads
-  const leads = Array(5).fill({
-    name: "Service Name",
-    category: "Clothing",
-    locationName: "Location Name",
-    subCategory: "Shirts",
-    price: "$1500.99",
-  });
+  useEffect(() => {
+    const getServices = async () => {
+      try {
+        setLoading(true);
+        const result = await fetchServices({});
+        setProducts(result);
+      } catch (error: any) {
+        setError(error as string);
+      } finally {
+        setLoading(false);
+      }
+    };
+    getServices();
+  }, [selected]);
 
   return (
     <ScrollView style={styles.container}>
@@ -101,7 +101,7 @@ const LeadsMobile: React.FC = () => {
 
         {/* Leads List */}
         <View style={[styles.scrollView, styles.listContainer]}>
-          {leads.map((lead, index) =>
+          {services.map((service, index) =>
             selected === "Services" ? (
               <View key={index} style={[styles.leadCard, styles.mobileCard]}>
                 <View style={styles.cardContent}>
@@ -111,20 +111,28 @@ const LeadsMobile: React.FC = () => {
                       { backgroundColor: colors.elevation.level2 },
                     ]}
                   >
-                    {lead.name}
+                    {service.name}
                   </Text>
                   <View style={{ padding: 10, gap: 15 }}>
                     <View style={{ flexDirection: "row" }}>
                       <Text style={styles.title}>Location (s): </Text>
-                      <Text style={{ flex: 2 }}>{lead.locationName}</Text>
+                      <Text style={{ flex: 2 }}>
+                        {service.location
+                          .map((loc) => loc.locationName)
+                          .join(", ")}
+                      </Text>
                     </View>
                     <View style={{ flexDirection: "row" }}>
                       <Text style={styles.title}>Category: </Text>
-                      <Text style={{ flex: 2 }}>{lead.category}</Text>
+                      <Text style={{ flex: 2 }}>
+                        {service.category.join(", ")}
+                      </Text>
                     </View>
                     <View style={{ flexDirection: "row" }}>
                       <Text style={styles.title}>Subcategory</Text>
-                      <Text style={{ flex: 2 }}>{lead.subCategory}</Text>
+                      <Text style={{ flex: 2 }}>
+                        {service.subCategory && service.subCategory.join(", ")}
+                      </Text>
                     </View>
                     <View
                       style={{
@@ -136,7 +144,9 @@ const LeadsMobile: React.FC = () => {
                     >
                       <Text style={{ flex: 1 }}>
                         <Text style={styles.title}>Price: </Text>
-                        {lead.price}
+                        {service.priceType === "flat"
+                          ? service.price
+                          : `$${service.priceRange?.from} - $${service.priceRange?.to}`}
                       </Text>
 
                       <View
@@ -150,7 +160,12 @@ const LeadsMobile: React.FC = () => {
                         }}
                       >
                         <Feather name="link" size={20} color="gray" />
-                        <Feather name="edit" size={20} color="gray" />
+                        <Feather
+                          name="edit"
+                          onPress={() => router.push("/services/add")}
+                          size={20}
+                          color="gray"
+                        />
                         <Ionicons name="trash-outline" size={20} color="red" />
                       </View>
                     </View>
@@ -166,12 +181,16 @@ const LeadsMobile: React.FC = () => {
                       { backgroundColor: colors.elevation.level2 },
                     ]}
                   >
-                    {lead.name}
+                    {service.name}
                   </Text>
                   <View style={{ padding: 10, gap: 15 }}>
                     <View style={{ flexDirection: "row" }}>
                       <Text style={styles.title}>Variants: </Text>
-                      <Text style={{ flex: 2 }}>Male, White</Text>
+                      <Text style={{ flex: 2 }}>
+                        {service.options
+                          ?.map((option) => option.optionName)
+                          .join(", ")}
+                      </Text>
                     </View>
                     <View style={{ flexDirection: "row" }}>
                       <Text style={styles.title}>Customer Name: </Text>
@@ -183,7 +202,7 @@ const LeadsMobile: React.FC = () => {
                     </View>
                     <View style={{ flexDirection: "row" }}>
                       <Text style={styles.title}>Description:</Text>
-                      <Text style={{ flex: 2 }}>Lorem iudgh jif ess hg...</Text>
+                      <Text style={{ flex: 2 }}>{service.description}</Text>
                     </View>
                     <View
                       style={{
@@ -195,7 +214,9 @@ const LeadsMobile: React.FC = () => {
                     >
                       <Text style={{ flex: 1 }}>
                         <Text style={styles.title}>Price: </Text>
-                        {lead.price}
+                        {service.priceType === "flat"
+                          ? service.price
+                          : `$${service.priceRange?.from} - $${service.priceRange?.to}`}
                       </Text>
 
                       <View
@@ -208,7 +229,7 @@ const LeadsMobile: React.FC = () => {
                           paddingHorizontal: 30,
                         }}
                       >
-                        <Rating rating={5} show={false} />
+                        <Rating rating={service.rating} show={false} />
                       </View>
                     </View>
                   </View>

@@ -100,7 +100,7 @@ const Coupons = () => {
                   </Button>
                 }
               >
-                <Create />
+                {(close) => <Create onClose={close} />}
               </Modal>
             </View>
           </>

@@ -30,4 +30,6 @@ export interface User {
   services: string;
   locations: string;
   createedAt: Date;
+  follower: User[];
+  following: string[];
 }

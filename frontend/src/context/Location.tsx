@@ -18,9 +18,8 @@ import { Location } from "../types/location";
 
 interface LocationContextType {
   locations: Location[];
-  currentLocation: Location | null;
   loadUserLocations: () => Promise<void>;
-  loadLocationById: (locationId: string) => Promise<void>;
+  loadLocationById: (locationId: string) => Promise<Location>;
   createNewLocation: (locationData: LocationData) => Promise<void>;
   updateExistingLocation: (
     locationId: string,
@@ -41,7 +40,6 @@ interface LocationProviderProps {
 
 export const LocationProvider = ({ children }: LocationProviderProps) => {
   const [locations, setLocations] = useState<Location[]>([]);
-  const [currentLocation, setCurrentLocation] = useState<Location | null>(null);
 
   // Function to load all user locations
   const loadUserLocations = async () => {
@@ -49,17 +47,17 @@ export const LocationProvider = ({ children }: LocationProviderProps) => {
       const locations = await getUserAllLocations();
       setLocations(locations);
     } catch (error) {
-      throw (error as Error).message;
+      throw error;
     }
   };
 
   // Function to load a location by ID
-  const loadLocationById = async (locationId: string): Promise<void> => {
+  const loadLocationById = async (locationId: string): Promise<Location> => {
     try {
       const location = await getLocationById(locationId);
-      setCurrentLocation(location);
+      return location;
     } catch (error) {
-      throw (error as Error).message;
+      throw error;
     }
   };
 
@@ -71,7 +69,7 @@ export const LocationProvider = ({ children }: LocationProviderProps) => {
       await createLocation(locationData);
       loadUserLocations();
     } catch (error) {
-      throw (error as Error).message;
+      throw error;
     }
   };
 
@@ -88,7 +86,7 @@ export const LocationProvider = ({ children }: LocationProviderProps) => {
         )
       );
     } catch (error) {
-      throw (error as Error).message;
+      throw error;
     }
   };
 
@@ -100,7 +98,7 @@ export const LocationProvider = ({ children }: LocationProviderProps) => {
         prevLocations.filter((location) => location._id !== locationId)
       );
     } catch (error) {
-      throw (error as Error).message;
+      throw error;
     }
   };
 
@@ -110,7 +108,6 @@ export const LocationProvider = ({ children }: LocationProviderProps) => {
 
   const value: LocationContextType = {
     locations,
-    currentLocation,
     loadUserLocations,
     loadLocationById,
     createNewLocation,

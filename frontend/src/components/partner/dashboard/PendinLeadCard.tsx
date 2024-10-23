@@ -1,9 +1,16 @@
 // PendingLeadsCard.tsx
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { StyleSheet, ScrollView, View } from "react-native";
 import { Card, Avatar, List, Text } from "react-native-paper";
 import Modal from "../../modals/modal";
 import LeadsModal from "../leads/LeadModal";
+import { useLead } from "@/src/context/Lead";
+import { useToastNotification } from "@/src/context/ToastNotificationContext";
+import { Lead } from "@/src/types/lead";
+import moment from "moment";
+import { imageURL } from "@/src/services/api";
+import { router } from "expo-router";
+import useDimensions from "@/src/hooks/useDimension";
 
 const leads = [
   {
@@ -38,11 +45,31 @@ const leads = [
 ];
 
 const PendingLeadsCard: React.FC = () => {
+  const { addNotification } = useToastNotification();
+  const { fetchPartnerLeads } = useLead();
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const { isMobile } = useDimensions();
+
+  useEffect(() => {
+    const fetchLLeads = async () => {
+      try {
+        const res = await fetchPartnerLeads("Pending");
+        setLeads(res);
+      } catch (error: any) {
+        addNotification(error);
+      }
+    };
+    fetchLLeads();
+  }, []);
   return (
     <Card style={styles.card}>
       <Card.Title
         title="Pending Leads"
-        right={() => <Text style={styles.viewAll}>VIEW ALL</Text>}
+        right={() => (
+          <Text onPress={() => router.push("/leads")} style={styles.viewAll}>
+            VIEW ALL
+          </Text>
+        )}
         titleStyle={{ fontWeight: "bold" }}
       />
       <Card.Content>
@@ -50,27 +77,56 @@ const PendingLeadsCard: React.FC = () => {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ flex: 1 }}
         >
-          {leads.map((lead) => (
-            <Modal
-              key={lead.id}
-              button={
+          {leads.length <= 0 ? (
+            <Text>No Pendiing Leads</Text>
+          ) : (
+            leads.map((lead) =>
+              isMobile ? (
                 <List.Item
-                  title={lead.name}
-                  description={`${lead.service}`}
+                  key={lead._id}
+                  title={lead.customerName}
+                  description={`${lead.service.name}`}
                   left={() => (
                     <Avatar.Image
                       size={40}
-                      source={{ uri: "https://via.placeholder.com/40" }}
+                      source={{ uri: imageURL + lead.service.images[0] }}
                     />
                   )}
-                  right={() => <Text style={styles.time}>{lead.time}</Text>}
+                  right={() => (
+                    <Text style={styles.time}>
+                      {moment(lead.createdAt).fromNow()}
+                    </Text>
+                  )}
                   style={styles.listItem}
+                  onPress={() => router.push(`/leads/${lead._id}`)}
                 />
-              }
-            >
-              <LeadsModal />
-            </Modal>
-          ))}
+              ) : (
+                <Modal
+                  key={lead._id}
+                  button={
+                    <List.Item
+                      title={lead.customerName}
+                      description={`${lead.service.name}`}
+                      left={() => (
+                        <Avatar.Image
+                          size={40}
+                          source={{ uri: imageURL + lead.service.images[0] }}
+                        />
+                      )}
+                      right={() => (
+                        <Text style={styles.time}>
+                          {moment(lead.createdAt).fromNow()}
+                        </Text>
+                      )}
+                      style={styles.listItem}
+                    />
+                  }
+                >
+                  {(close) => <LeadsModal />}
+                </Modal>
+              )
+            )
+          )}
         </ScrollView>
       </Card.Content>
     </Card>

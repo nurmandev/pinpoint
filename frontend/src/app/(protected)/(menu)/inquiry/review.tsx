@@ -6,33 +6,130 @@ import {
   StyleSheet,
   Image,
   ScrollView,
+  Alert,
 } from "react-native";
-import { FontAwesome, Ionicons } from "@expo/vector-icons"; // For star icons
-import { router } from "expo-router";
+import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { Appbar, useTheme } from "react-native-paper";
+import * as ImagePicker from "expo-image-picker";
 import TextInput from "@/src/components/TextInput";
 import Button from "@/src/components/Button";
+import { router } from "expo-router";
+import { useToastNotification } from "@/src/context/ToastNotificationContext";
+import { useLocalSearchParams } from "expo-router";
+import { imageURL } from "@/src/services/api";
+import { useUser } from "@/src/context/User";
+import { submitReview } from "@/src/services/service";
 
 const Review = () => {
   const { colors } = useTheme();
+  const { user } = useUser();
+  const { addNotification } = useToastNotification();
+  const { id, image, serviceName } = useLocalSearchParams();
   const [rating, setRating] = useState(0);
   const [review, setReview] = useState("");
-  const [photo, setPhoto] = useState(null); // To handle photo uploads
+  const [photo, setPhoto] = useState<(File & { uri: string }) | null>(null); // Store the photo's URI
+  const [name, setName] = useState(user?.username);
+  const [loading, setLoading] = useState(false);
 
   const handleRatingPress = (star: number) => {
     setRating(star);
   };
 
-  const handlePhotoUpload = () => {
-    // Handle photo upload logic here
-    // You can use ImagePicker from expo or any other library
+  const handlePhotoUpload = async () => {
+    // Ask for permission to access photos
+    const permissionResult =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (permissionResult.granted === false) {
+      Alert.alert(
+        "Permission Denied",
+        "You need to allow access to your photos to upload."
+      );
+      return;
+    }
+
+    // Open image picker to select photo/video
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      const selectedImage = {
+        uri: result.assets[0].uri,
+        name: result.assets[0].uri.split("/").pop(),
+        type: "image/jpeg",
+      } as any;
+      setPhoto(selectedImage);
+    }
   };
 
-  const handleSubmit = () => {
-    // Handle the submit action here
-    console.log("Rating:", rating);
-    console.log("Review:", review);
-    // Include other form submission logic like API calls
+  const validateForm = () => {
+    let isValid = true;
+
+    if (!rating) {
+      addNotification({
+        message: "Please provide a rating.",
+        error: true,
+      });
+      isValid = false;
+    }
+    if (!review) {
+      addNotification({
+        message: "Please write a review.",
+        error: true,
+      });
+      isValid = false;
+    }
+    if (!name) {
+      addNotification({
+        message: "Please enter your name.",
+        error: true,
+      });
+      isValid = false;
+    }
+
+    return isValid;
+  };
+
+  const handleSubmit = async () => {
+    if (!validateForm()) {
+      return;
+    }
+    if (!id) return;
+
+    // Mock API call or actual review submission
+    const reviewData = {
+      name,
+      rating,
+      content: review,
+      photo, // Include photo if uploaded
+    };
+    try {
+      setLoading(true);
+      await submitReview(id as string, reviewData);
+
+      // Submit review logic here (e.g., API call)
+      addNotification({
+        message: "Review submitted successfully!",
+      });
+
+      // Reset form
+      setRating(0);
+      setReview("");
+      setPhoto(null);
+      setName("");
+      router.back();
+    } catch (error: any) {
+      addNotification({
+        message: error,
+        error: true,
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -43,13 +140,13 @@ const Review = () => {
         <Appbar.BackAction onPress={() => router.back()} />
         <Appbar.Content title="Review Service" />
       </Appbar.Header>
-      <ScrollView style={{ padding: 15, flex: 1 }}>
+      <ScrollView style={{ padding: 15, paddingBottom: 30, flex: 1 }}>
         <View style={styles.serviceContainer}>
           <Image
-            source={require("../../../../../assets/images/product.png")}
+            source={{ uri: imageURL + image }}
             style={styles.serviceImage}
           />
-          <Text style={styles.serviceName}>Service Name</Text>
+          <Text style={styles.serviceName}>{serviceName}</Text>
         </View>
         <View
           style={{
@@ -76,22 +173,47 @@ const Review = () => {
           </View>
         </View>
         <TextInput
-          placeholder="name"
+          placeholder="Name"
           inputStyle={{ backgroundColor: "white", borderRadius: 8 }}
+          value={name}
+          editable={false}
+          onChangeText={(text) => {
+            setName(text);
+          }}
         />
+
         <TextInput
-          value="Write a Review"
+          value={review}
+          onChangeText={(text) => {
+            setReview(text);
+          }}
+          placeholder="Write a Review"
           inputStyle={styles.textinput}
           multiline={true}
           numberOfLines={4}
         />
-        <TouchableOpacity style={styles.uploadSection}>
+
+        {photo && (
+          <Image source={{ uri: photo.uri }} style={styles.previewImage} />
+        )}
+        <TouchableOpacity
+          style={styles.uploadSection}
+          onPress={handlePhotoUpload}
+        >
           <Ionicons name="cloud-upload-outline" size={30} />
           <Text style={{ fontSize: 18, marginVertical: 5 }}>
             Upload Photo/VIDEO
           </Text>
         </TouchableOpacity>
-        <Button containerStyle={{ marginTop: 15 }}>Post</Button>
+
+        <Button
+          loading={loading}
+          containerStyle={{ marginTop: 15 }}
+          onPress={handleSubmit}
+        >
+          Post
+        </Button>
+        <View style={{ height: 30 }} />
       </ScrollView>
     </View>
   );
@@ -142,42 +264,16 @@ const styles = StyleSheet.create({
     gap: 5,
     paddingBottom: 40,
   },
-  input: {
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 10,
-    padding: 10,
-    marginBottom: 10,
+  error: {
+    color: "red",
+    textAlign: "center",
+    marginVertical: 5,
   },
-  textarea: {
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 10,
-    padding: 10,
-    marginBottom: 10,
+  textinput: {
     height: 100,
-    textAlignVertical: "top",
-  },
-  photoUpload: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 20,
-  },
-  photoUploadText: {
-    marginLeft: 10,
-    color: "#007AFF",
-  },
-  submitButton: {
-    backgroundColor: "#007AFF",
-    borderRadius: 10,
-    paddingVertical: 15,
-    alignItems: "center",
-  },
-  submitButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
+    paddingVertical: 10,
+    backgroundColor: "white",
+    borderRadius: 8,
   },
   uploadSection: {
     height: 100,
@@ -188,11 +284,11 @@ const styles = StyleSheet.create({
     borderColor: "#e1e1e1",
     marginVertical: 15,
   },
-  textinput: {
-    height: 100,
-    paddingVertical: 10,
-    backgroundColor: "white",
-    borderRadius: 8,
+  previewImage: {
+    width: "100%",
+    height: 200,
+    marginTop: 10,
+    borderRadius: 10,
   },
 });
 

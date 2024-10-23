@@ -1,8 +1,10 @@
 import { Response } from "express";
-import Location from "../models/location";
+import Location, { LocationDocument } from "../models/location";
 import { validationResult } from "express-validator";
 import { CustomRequest } from "../middleware/auth";
 import { deleteMediaFromS3, uploadMediaToS3 } from "../utils/media";
+import Service from "../models/service";
+import Product from "../models/product";
 
 // Create a new Location
 export const createLocation = async (req: CustomRequest, res: Response) => {
@@ -26,16 +28,11 @@ export const createLocation = async (req: CustomRequest, res: Response) => {
   } = req.body;
 
   try {
-    // Utility function to parse potential JSON fields
     const parseJSONField = (field: any, fieldName: string) => {
       if (typeof field === "string") {
         try {
           const parsedField = JSON.parse(field);
-          if (typeof parsedField === "object" || Array.isArray(parsedField)) {
-            return parsedField;
-          } else {
-            throw new Error();
-          }
+          return parsedField;
         } catch (error) {
           throw new Error(
             `Invalid format for ${fieldName}. Expected a valid JSON object or array.`
@@ -45,16 +42,32 @@ export const createLocation = async (req: CustomRequest, res: Response) => {
       return field;
     };
 
-    // Parse any fields that might be JSON stringified
     const parsedHoursOfOperation = parseJSONField(
       hoursOfOperation,
       "hoursOfOperation"
     );
     const parsedMenu = parseJSONField(menu, "menu");
-    const parsedCoordinates = parseJSONField(coordinates, "coordinates");
     const parsedPoll = parseJSONField(poll, "poll");
+    const parsedCategories = parseJSONField(categories, "categories");
+    const parsedCoordinates = parseJSONField(coordinates, "coordinates");
 
-    // Handle media files
+    // Parse coordinates (should be an object with latitude and longitude)
+    if (
+      !parsedCoordinates ||
+      !parsedCoordinates.latitude ||
+      !parsedCoordinates.longitude
+    ) {
+      res.status(400).json({ message: "Invalid coordinates provided" });
+      return;
+    }
+
+    // Convert parsedCoordinates into GeoJSON format for MongoDB geospatial queries
+    const geoCoordinates = {
+      type: "Point",
+      coordinates: [parsedCoordinates.longitude, parsedCoordinates.latitude],
+    };
+
+    // Handle media files (if any)
     const mediaUploadPromises: Promise<any>[] = [];
     if (req.files && Array.isArray(req.files)) {
       for (const file of req.files) {
@@ -65,27 +78,30 @@ export const createLocation = async (req: CustomRequest, res: Response) => {
       }
     }
 
+    // Wait for all media to be uploaded (if applicable)
     const mediaUploadResults = await Promise.all(mediaUploadPromises);
-    console.log(mediaUploadResults);
+
+    // Create the location object and save it
     const location = new Location({
       partnerId,
-      images: mediaUploadResults.map((image) => image.url),
+      images: mediaUploadResults.map((media) => media.url),
       locationName,
       address,
       description,
-      categories,
+      categories: parsedCategories,
       hoursOfOperation: parsedHoursOfOperation,
       menu: parsedMenu,
-      coordinates: parsedCoordinates,
+      coordinates: geoCoordinates,
       poll: parsedPoll,
     });
+
     await location.save();
+
     res
       .status(201)
       .json({ message: "Location created successfully", location });
-    return;
   } catch (error) {
-    console.log(error);
+    console.error("Error creating location:", error);
     res.status(500).json({ message: "Internal server error", error });
   }
 };
@@ -105,12 +121,109 @@ export const getUserAllLocations = async (
   }
 };
 
+// Get Nearby Locations with optional filters
+export const getNearbyLocations = async (req: CustomRequest, res: Response) => {
+  try {
+    const { latitude, longitude, radius, category, businessType } = req.query;
+
+    if (!latitude || !longitude) {
+      res.status(400).json({
+        message: "Please provide both latitude and longitude",
+      });
+      return;
+    }
+
+    const userLatitude = parseFloat(latitude as string);
+    const userLongitude = parseFloat(longitude as string);
+    const searchRadius = radius ? parseFloat(radius as string) : undefined;
+
+    const userLocation = {
+      type: "Point",
+      coordinates: [userLongitude, userLatitude],
+    };
+
+    // Build the query to find nearby locations
+    const query: any = {
+      coordinates: {
+        $near: {
+          $geometry: userLocation,
+          $maxDistance: searchRadius,
+        },
+      },
+    };
+
+    if (category) {
+      query.categories = { $in: [category] };
+    }
+
+    let locations: LocationDocument[] = await Location.find(
+      searchRadius ? query : {}
+    );
+
+    // Filter by businessType (service, product, or both) if provided
+    if (businessType) {
+      let locationIds: string[] = [];
+
+      if (businessType === "service" || businessType === "both") {
+        // Get locations that are linked to services
+        const services = await Service.find({
+          location: { $in: locations.map((l) => l._id) },
+        }).select("locations");
+        locationIds.push(
+          ...services.flatMap(
+            (service) => service.location as unknown as string
+          )
+        );
+      }
+
+      if (businessType === "product" || businessType === "both") {
+        // Get locations that are linked to products
+        const products = await Product.find({
+          location: { $in: locations.map((l) => l._id) },
+        }).select("locations");
+        locationIds.push(
+          ...products.flatMap(
+            (product) => product.location as unknown as string
+          )
+        );
+      }
+
+      // Filter locations based on the selected location IDs
+      locations = locations.filter((location) =>
+        locationIds.includes((location._id as any).toString())
+      );
+    }
+
+    // If no radius is provided, fetch all locations
+    if (!searchRadius) {
+      const allLocations = await Location.find();
+      res.status(200).json({
+        message: "All locations fetched successfully",
+        locations: allLocations,
+      });
+      return;
+    }
+
+    // Return the filtered results
+    res.status(200).json({
+      message: "Nearby locations fetched successfully",
+      locations,
+    });
+  } catch (error) {
+    console.error("Error fetching nearby locations:", error);
+    res.status(500).json({ message: "Internal server error", error });
+  }
+};
+
 // Get a single Location by ID
 export const getLocationById = async (req: CustomRequest, res: Response) => {
   const { id } = req.params;
 
   try {
-    const location = await Location.findById(id);
+    const location = await Location.findById(id).populate(
+      "partnerId",
+      "username"
+    );
     if (!location) {
       res.status(404).json({ message: "Location not found" });
       return;

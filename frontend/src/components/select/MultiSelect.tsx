@@ -32,6 +32,7 @@ type MultiSelectProps = {
   modalText?: string;
   buttonText?: string;
   modalTitle?: string;
+  error?: string;
 };
 
 const MultiSelect: React.FC<MultiSelectProps> = ({
@@ -47,6 +48,7 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
   modalText,
   buttonText,
   modalTitle,
+  error,
 }) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [localSelectedValues, setLocalSelectedValues] =
@@ -87,6 +89,18 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
             <Ionicons name="chevron-down" size={24} color="#888" />
           </>
         )}
+        {error ? (
+          <Text
+            style={{
+              color: "red",
+              fontSize: 15,
+              position: "absolute",
+              bottom: -15,
+            }}
+          >
+            {error}
+          </Text>
+        ) : null}
       </TouchableOpacity>
 
       <Modal

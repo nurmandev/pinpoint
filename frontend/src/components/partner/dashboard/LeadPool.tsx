@@ -1,46 +1,43 @@
 // LeadPool.tsx
-import React from "react";
+import { useLead } from "@/src/context/Lead";
+import { useToastNotification } from "@/src/context/ToastNotificationContext";
+import useDimensions from "@/src/hooks/useDimension";
+import { imageURL } from "@/src/services/api";
+import { Lead } from "@/src/types/lead";
+import { router } from "expo-router";
+import moment from "moment";
+import React, { useEffect, useState } from "react";
 import { StyleSheet, ScrollView, View } from "react-native";
 import { Card, Avatar, List, Text } from "react-native-paper";
-
-const leads = [
-  {
-    id: "1",
-    name: "Cody Dixon",
-    service: "Service Name",
-    time: "1 min ago",
-    location: "Location Name",
-  },
-  {
-    id: "2",
-    name: "Cody Dixon",
-    service: "Service Name",
-    time: "5 min ago",
-    location: "Location Name",
-  },
-  {
-    id: "3",
-    name: "Cody Dixon",
-    service: "Service Name",
-    time: "1 hour ago",
-    location: "Location Name",
-  },
-  {
-    id: "4",
-    name: "Cody Dixon",
-    service: "Service Name",
-    time: "2 hours ago",
-    location: "Location Name",
-  },
-  // Add more items if needed to test scrolling
-];
+import Modal from "../../modals/modal";
+import LeadsModal from "../leads/LeadModal";
 
 const LeadPool: React.FC = () => {
+  const { addNotification } = useToastNotification();
+  const { fetchPartnerLeads } = useLead();
+  const { isMobile } = useDimensions();
+  const [leads, setLeads] = useState<Lead[]>([]);
+
+  useEffect(() => {
+    const fetchLLeads = async () => {
+      try {
+        const res = await fetchPartnerLeads("Pool");
+        setLeads(res);
+      } catch (error: any) {
+        addNotification(error);
+      }
+    };
+    fetchLLeads();
+  }, []);
   return (
     <Card style={styles.card}>
       <Card.Title
         title="Lead Pool"
-        right={() => <Text style={styles.viewAll}>VIEW ALL</Text>}
+        right={() => (
+          <Text onPress={() => router.push("/leads")} style={styles.viewAll}>
+            VIEW ALL
+          </Text>
+        )}
         titleStyle={{ fontWeight: "bold" }}
       />
       <Card.Content>
@@ -48,21 +45,56 @@ const LeadPool: React.FC = () => {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ flex: 1 }}
         >
-          {leads.map((lead) => (
-            <List.Item
-              key={lead.id}
-              title={lead.name}
-              description={`${lead.service}`}
-              left={() => (
-                <Avatar.Image
-                  size={40}
-                  source={{ uri: "https://via.placeholder.com/40" }}
+          {leads.length <= 0 ? (
+            <Text>No Pool Leads</Text>
+          ) : (
+            leads.map((lead) =>
+              isMobile ? (
+                <List.Item
+                  key={lead._id}
+                  title={lead.customerName}
+                  description={`${lead.service.name}`}
+                  left={() => (
+                    <Avatar.Image
+                      size={40}
+                      source={{ uri: imageURL + lead.service.images[0] }}
+                    />
+                  )}
+                  right={() => (
+                    <Text style={styles.time}>
+                      {moment(lead.createdAt).fromNow()}
+                    </Text>
+                  )}
+                  style={styles.listItem}
+                  onPress={() => router.push(`/leads/${lead._id}`)}
                 />
-              )}
-              right={() => <Text style={styles.time}>{lead.time}</Text>}
-              style={styles.listItem}
-            />
-          ))}
+              ) : (
+                <Modal
+                  button={
+                    <List.Item
+                      title={lead.customerName}
+                      description={`${lead.service.name}`}
+                      left={() => (
+                        <Avatar.Image
+                          size={40}
+                          source={{ uri: imageURL + lead.service.images[0] }}
+                        />
+                      )}
+                      right={() => (
+                        <Text style={styles.time}>
+                          {moment(lead.createdAt).fromNow()}
+                        </Text>
+                      )}
+                      style={styles.listItem}
+                    />
+                  }
+                  key={lead._id}
+                >
+                  {(close) => <LeadsModal />}
+                </Modal>
+              )
+            )
+          )}
         </ScrollView>
       </Card.Content>
     </Card>

@@ -55,7 +55,7 @@ const HeaderStories = () => {
           >
             <View style={styles.addStoryContainer}>
               <Image
-                source={{ uri: user?.avatarUrl }}
+                source={{ uri: imageURL + user?.avatarUrl }}
                 style={styles.storyImage}
               />
               <View

@@ -3,11 +3,15 @@ import React, { useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { Menu } from "react-native-paper";
+import { Lead } from "@/src/types/lead";
+import moment from "moment";
+import { imageURL } from "@/src/services/api";
 
-const data = [1, 2, 3];
+interface Props {
+  leads: Lead[];
+}
 
-interface Props {}
-const Pending: React.FC<Props> = () => {
+const Pending: React.FC<Props> = ({ leads }) => {
   const [visible, setVisible] = useState(false);
 
   const openMenu = () => setVisible(true);
@@ -26,6 +30,14 @@ const Pending: React.FC<Props> = () => {
       anchorPosition="bottom"
       mode="flat"
     >
+      <Menu.Item
+        leadingIcon="image-edit-outline"
+        onPress={() => {
+          closeMenu();
+          router.push("/addpost");
+        }}
+        title="Add Post"
+      />
       <TouchableOpacity
         onPress={closeMenu}
         style={{ flexDirection: "row", gap: 10, paddingHorizontal: 15 }}
@@ -39,23 +51,26 @@ const Pending: React.FC<Props> = () => {
   return (
     <View style={styles.section}>
       <View style={{ marginTop: 10 }}>
-        {data.map((item) => (
+        {leads.length <= 0 && <Text>No Pending Lead</Text>}
+        {leads.map((item) => (
           <TouchableOpacity
-            onPress={() => router.push("/inquiry/detail")}
+            onPress={() => router.push(`/inquiry/${item._id}`)}
             style={styles.card}
-            key={item}
+            key={item._id}
           >
             <Image
-              source={require("../../../../assets/images/product.png")}
+              source={{ uri: imageURL + item.service.images[0] }}
               style={styles.image}
             />
             <View style={styles.rightSection}>
-              <Text style={styles.name}>Service Name</Text>
-              <Text style={{}}>Location Name</Text>
-              <Text style={{}}>
-                Lorem ipsum dolor sit amet, consectetur adipisci...
+              <Text style={styles.name}>{item.service.name}</Text>
+              <Text style={{}}>{item.location.locationName}</Text>
+              <Text style={{}} numberOfLines={3}>
+                {item.service.description}
               </Text>
-              <Text style={{}}>07/12/24, 09:00pm </Text>
+              <Text style={{ fontWeight: "500" }}>
+                {moment(item.serviceRequestDate).calendar()}
+              </Text>
             </View>
             {renderOption()}
           </TouchableOpacity>
@@ -84,7 +99,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   image: { width: 80, height: 80, borderRadius: 10 },
-  rightSection: { gap: 5 },
+  rightSection: { gap: 5, flex: 1 },
   name: { fontSize: 16, fontWeight: "500" },
   optionButton: { position: "absolute", top: 5, right: 15 },
 });

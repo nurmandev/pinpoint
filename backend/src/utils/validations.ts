@@ -120,3 +120,77 @@ export const productValidation = [
     .isBoolean()
     .withMessage("In Shop Only must be a boolean value"),
 ];
+
+export const productReviewValidation = [
+  check("rating")
+    .isInt({ min: 1, max: 5 })
+    .withMessage("Rating must be between 1 and 5"),
+  check("content")
+    .notEmpty()
+    .withMessage("Review content is required")
+    .isLength({ max: 1000 })
+    .withMessage("Review content cannot exceed 1000 characters"),
+];
+
+export const serviceValidation = [
+  check("name")
+    .notEmpty()
+    .withMessage("Product name is required")
+    .isLength({ max: 100 })
+    .withMessage("Product name cannot exceed 100 characters"),
+  check("description")
+    .notEmpty()
+    .withMessage("Product description is required")
+    .isLength({ max: 500 })
+    .withMessage("Description cannot exceed 500 characters"),
+  check("price")
+    .isFloat({ min: 0 })
+    .withMessage("Price must be a positive number"),
+  check("images")
+    .isArray({ min: 1 })
+    .withMessage("At least one image is required"),
+  check("location")
+    .isArray({ min: 1 })
+    .withMessage("At least one locationmain category is required"),
+  check("mainCategory")
+    .isArray({ min: 1 })
+    .withMessage("At least one main category is required"),
+  check("category")
+    .isArray({ min: 1 })
+    .withMessage("At least one category is required"),
+  check("availableOnline")
+    .isBoolean()
+    .withMessage("Available Online must be a boolean value"),
+  check("ships").isBoolean().withMessage("Ships must be a boolean value"),
+  check("pickupAvailable")
+    .isBoolean()
+    .withMessage("Pickup Available must be a boolean value"),
+  check("inShopOnly")
+    .isBoolean()
+    .withMessage("In Shop Only must be a boolean value"),
+];
+
+export const serviceReviewValidation = [
+  check("rating")
+    .isInt({ min: 1, max: 5 })
+    .withMessage("Rating must be between 1 and 5"),
+  check("content")
+    .notEmpty()
+    .withMessage("Review content is required")
+    .isLength({ max: 1000 })
+    .withMessage("Review content cannot exceed 1000 characters"),
+];
+
+export const leadValidation = [
+  check("customerName").notEmpty().withMessage("Customer name is required"),
+  check("email").isEmail().withMessage("Valid email is required"),
+  check("phone").notEmpty().withMessage("Phone number is required"),
+  check("contactMethod")
+    .isIn(["text", "email", "call"])
+    .withMessage("Invalid contact method"),
+  check("address").notEmpty().withMessage("Address is required"),
+  check("serviceRequestDate").isISO8601().withMessage("Valid date is required"),
+  check("details").notEmpty().withMessage("Details are required"),
+  check("location").isArray().withMessage("Location is required"),
+  check("service").isArray().withMessage("Service is required"),
+];

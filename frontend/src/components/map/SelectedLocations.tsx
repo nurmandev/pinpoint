@@ -1,14 +1,42 @@
 import { StyleSheet, Text, View, Image } from "react-native";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useTheme } from "react-native-paper";
 import { lightColors } from "@/src/utils/colors";
+import { getDistanceAndTime } from "../../utils/map";
+import { LocationCoords } from "@/src/app/(protected)/(tabs)/map";
+import { imageURL } from "@/src/services/api";
 
-const SelectedLocations = () => {
+interface Props {
+  origin: LocationCoords;
+  destination: { location: LocationCoords; name: string; image: string };
+}
+
+const SelectedLocations: React.FC<Props> = ({ origin, destination }) => {
   const { colors } = useTheme();
+  const [distance, setDistance] = useState("");
+  const [duration, setDuration] = useState("");
+
+  useEffect(() => {
+    const fetchDistance = async () => {
+      try {
+        const { distance, duration } = await getDistanceAndTime(
+          origin,
+          destination.location
+        );
+        setDistance(distance);
+        setDuration(duration);
+      } catch (error) {
+        console.error("Error fetching distance and duration:", error);
+      }
+    };
+
+    fetchDistance();
+  }, []);
+
   return (
     <View style={{ padding: 16 }}>
       <Text style={{ fontSize: 30, color: colors.primary, fontWeight: "500" }}>
-        32min <Text style={{ color: "black" }}>(10Mi)</Text>
+        {duration} <Text style={{ color: "black" }}>({distance})</Text>
       </Text>
       <View
         style={{
@@ -30,7 +58,7 @@ const SelectedLocations = () => {
             }}
           />
           <Image
-            source={require("@/assets/images/logo1.png")} // Replace with your custom image path
+            source={{ uri: imageURL + destination.image }}
             style={styles.customImageMarker}
             resizeMode="contain"
           />
@@ -54,7 +82,7 @@ const SelectedLocations = () => {
               borderRadius: 8,
             }}
           >
-            <Text style={{ fontSize: 18 }}>Partner location</Text>
+            <Text style={{ fontSize: 18 }}>{destination.name}</Text>
           </View>
         </View>
       </View>
@@ -82,5 +110,6 @@ const styles = StyleSheet.create({
   customImageMarker: {
     width: 20,
     height: 20,
+    borderRadius: 20,
   },
 });

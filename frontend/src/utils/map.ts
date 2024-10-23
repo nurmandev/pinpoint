@@ -1,3 +1,42 @@
+import axios from "axios";
+
+const GOOGLE_API_KEY = "AIzaSyBAG6Xy390W6KIWFx3DFQAtIDVnW3gqCFQ";
+
+interface DistanceResponse {
+  distance: string;
+  duration: string;
+}
+
+export const getDistanceAndTime = async (
+  origin: { latitude: number; longitude: number },
+  destination: { latitude: number; longitude: number },
+  mode: "driving" | "walking" | "bicycling" | "transit" = "driving"
+): Promise<DistanceResponse> => {
+  try {
+    const response = await axios.get(
+      `https://maps.googleapis.com/maps/api/distancematrix/json`,
+      {
+        params: {
+          origins: `${origin.latitude},${origin.longitude}`,
+          destinations: `${destination.latitude},${destination.longitude}`,
+          mode,
+          units: "imperial",
+          key: GOOGLE_API_KEY,
+        },
+      }
+    );
+
+    const result = response.data.rows[0].elements[0];
+    const distance = result.distance.text;
+    const duration = result.duration.text;
+
+    return { distance, duration };
+  } catch (error) {
+    console.error("Error fetching distance and time:", error);
+    throw error;
+  }
+};
+
 export const mapStyle = [
   {
     elementType: "geometry",

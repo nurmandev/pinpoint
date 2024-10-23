@@ -1,6 +1,9 @@
+import { IReview } from "./service";
+import { User } from "./user";
+
 export interface Location {
   _id: string;
-  partnerId: string;
+  partnerId: User;
   locationName: string;
   address: string;
   images: string[];
@@ -8,8 +11,9 @@ export interface Location {
   categories: string[];
   hoursOfOperation: {
     day: string;
-    open: string;
-    close: string;
+    openTime: string;
+    closeTime: string;
+    isOpen: boolean;
   }[];
   menu: {
     category: string;
@@ -24,4 +28,8 @@ export interface Location {
     longitude: number;
   };
   createdAt: string;
+  rating: number;
+  reviews: IReview[];
+  followers: string[];
+  likes: string[];
 }

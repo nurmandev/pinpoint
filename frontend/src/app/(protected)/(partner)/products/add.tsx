@@ -2,9 +2,10 @@ import {
   StyleSheet,
   Text,
   View,
-  Image,
   ScrollView,
   Platform,
+  Image,
+  TouchableOpacity,
 } from "react-native";
 import React, { useState } from "react";
 import {
@@ -16,20 +17,295 @@ import {
 } from "react-native-paper";
 import Button from "@/src/components/Button";
 import MultiSelect from "@/src/components/select/MultiSelect";
-import { FontAwesome, Ionicons, MaterialIcons } from "@expo/vector-icons";
-import HoursOfOperation from "@/src/components/partner/location/HoursOfOperation";
+import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import Select from "@/src/components/Select";
 import useDimensions from "@/src/hooks/useDimension";
+import { useProduct } from "@/src/context/Product";
+import { ProductData } from "@/src/services/product";
+import * as ImagePicker from "expo-image-picker";
+import { useLocation } from "@/src/context/Location";
+import { router } from "expo-router";
 
 const categoriesOption = [
   { label: "Clothing", value: "clothing" },
   { label: "Electronic", value: "electronic" },
+  { label: "Food & Beverage", value: "Food & Beverage" },
+  { label: "Jewelry", value: "Jewelry" },
 ];
-const Location = () => {
+
+const subCategoriesOption = [
+  { label: "Shirts", value: "Shirts" },
+  { label: "Shorts", value: "Shorts" },
+  { label: "Jacket", value: "Jacket" },
+];
+const AddProduct = () => {
   const { colors } = useTheme();
   const { isMobile } = useDimensions();
-  const [email, setEmail] = useState("");
-  const [category, setCategory] = useState<(string | number)[]>([]);
+  const { createNewProduct } = useProduct();
+  const { locations: userLocations } = useLocation();
+
+  // State Management
+  const [formData, setFormData] = useState<ProductData>({
+    name: "",
+    description: "",
+    price: 0,
+    images: [],
+    location: [],
+    mainCategory: [],
+    category: [],
+    subCategory: [],
+    options: [],
+    availableOnline: false,
+    ships: false,
+    pickupAvailable: false,
+    inShopOnly: false,
+  });
+  const [image, setImage] = useState({ url: "", name: "" });
+  const [image2, setImage2] = useState({ url: "", name: "" });
+  const [image3, setImage3] = useState({ url: "", name: "" });
+  const [image4, setImage4] = useState({ url: "", name: "" });
+  const [image5, setImage5] = useState({ url: "", name: "" });
+  const [uploading, setUploading] = useState(false);
+
+  const [errors, setErrors] = useState({
+    name: "",
+    description: "",
+    price: "",
+    images: "",
+    location: "",
+    mainCategory: "",
+    category: "",
+    subCategory: "",
+    options: "",
+  });
+
+  const [productOptions, setProductOptions] = useState<ProductData["options"]>([
+    { optionCategory: "", optionName: "" },
+  ]);
+  const [locations, setLocations] = useState<ProductData["location"]>([""]);
+
+  const pickImage = async (index: number) => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      return;
+    }
+
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 0.7,
+      allowsMultipleSelection: false,
+    });
+
+    if (!result.canceled) {
+      switch (index) {
+        case 1:
+          setImage({
+            url: result.assets[0].uri,
+            name: result.assets[0].fileName || `image_${Date.now()}.jpg`,
+          });
+          break;
+        case 2:
+          setImage2({
+            url: result.assets[0].uri,
+            name: result.assets[0].fileName || `image_${Date.now()}.jpg`,
+          });
+          break;
+        case 3:
+          setImage3({
+            url: result.assets[0].uri,
+            name: result.assets[0].fileName || `image_${Date.now()}.jpg`,
+          });
+          break;
+        case 4:
+          setImage4({
+            url: result.assets[0].uri,
+            name: result.assets[0].fileName || `image_${Date.now()}.jpg`,
+          });
+          break;
+        case 5:
+          setImage5({
+            url: result.assets[0].uri,
+            name: result.assets[0].fileName || `image_${Date.now()}.jpg`,
+          });
+          break;
+
+        default:
+          break;
+      }
+      setErrors((prev) => ({
+        ...prev,
+        images: "",
+      }));
+    }
+  };
+
+  // Handle Input Change
+  const handleInputChange = (field: string, value: any) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+    // Clear errors on change
+    setErrors((prev) => ({
+      ...prev,
+      [field]: "",
+    }));
+  };
+
+  // Handle Checkbox Change
+  const handleCheckboxChange = (field: string, value: boolean) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  // Add Option
+  const addOption = () => {
+    setProductOptions((prev) => [
+      ...prev,
+      { optionCategory: "", optionName: "" },
+    ]);
+  };
+
+  const addLocation = () => {
+    setLocations((prev) => [...prev, ""]);
+  };
+
+  const handleLocationChange = (index: number, value: string) => {
+    const updatedLocations = [...locations];
+    updatedLocations[index] = value;
+    setLocations(updatedLocations);
+    setErrors((prev) => ({
+      ...prev,
+      location: "",
+    }));
+  };
+
+  // Handle Option Change
+  const handleOptionChange = (
+    index: number,
+    field: "optionCategory" | "optionName",
+    value: string
+  ) => {
+    const updatedOptions = [...productOptions];
+    updatedOptions[index][field] = value;
+    setProductOptions(updatedOptions);
+    setFormData((prev) => ({
+      ...prev,
+      options: updatedOptions,
+    }));
+  };
+
+  // Validate Form
+  const validateForm = () => {
+    let valid = true;
+    let newErrors = {
+      name: "",
+      description: "",
+      price: "",
+      images: "",
+      location: "",
+      mainCategory: "",
+      category: "",
+      subCategory: "",
+      options: "",
+    };
+
+    if (!formData.name.trim()) {
+      newErrors.name = "Product name is required.";
+      valid = false;
+    }
+
+    if (!image && !image2 && image3 && image4 && image5) {
+      newErrors.images = "Add at least one image";
+      valid = false;
+    }
+
+    if (!formData.description.trim()) {
+      newErrors.description = "Product description is required.";
+      valid = false;
+    }
+
+    if (!formData.price || formData.price <= 0) {
+      newErrors.price = "Valid price is required.";
+      valid = false;
+    }
+
+    if (locations.length === 1 && locations[0] === "") {
+      newErrors.location = "Add at least one location";
+      valid = false;
+    }
+
+    if (formData.mainCategory.length <= 0) {
+      newErrors.mainCategory = "Select at least one main category.";
+      valid = false;
+    }
+
+    if (formData.category.length <= 0) {
+      newErrors.category = "Select at least one  category.";
+      valid = false;
+    }
+
+    if (formData.subCategory.length <= 0) {
+      newErrors.subCategory = "Select at least one sub category.";
+      valid = false;
+    }
+
+    setErrors(newErrors);
+    return valid;
+  };
+  // Handle Add Product
+  const handleAddProduct = async () => {
+    if (!validateForm()) {
+      return;
+    }
+
+    try {
+      // Prepare data
+      const payload = {
+        ...formData,
+        options: productOptions,
+        location: locations,
+        images: [image, image2, image3, image4, image5].filter(
+          (img) => img.url !== ""
+        ),
+      };
+      setUploading(true);
+      // Create new product
+      await createNewProduct(payload);
+
+      // Reset form
+      setFormData({
+        name: "",
+        description: "",
+        price: 0,
+        images: [],
+        location: [],
+        mainCategory: [],
+        category: [],
+        subCategory: [],
+        options: [],
+        availableOnline: false,
+        ships: false,
+        pickupAvailable: false,
+        inShopOnly: false,
+      });
+      setImage({ url: "", name: "" });
+      setImage2({ url: "", name: "" });
+      setImage3({ url: "", name: "" });
+      setImage4({ url: "", name: "" });
+      setImage5({ url: "", name: "" });
+      setProductOptions([]);
+      router.back();
+    } catch (error) {
+      console.error("Error adding product:", error);
+      // Alert.alert("Error", "Failed to add product. Please try again.");
+    } finally {
+      setUploading(false);
+    }
+  };
   return (
     <View style={styles.container}>
       {Platform.OS === "web" && (
@@ -37,7 +313,7 @@ const Location = () => {
           <Text style={styles.breadcrum}>
             <Text style={{ color: colors.primary, fontWeight: "500" }}>
               Dashboard
-            </Text>{" "}
+            </Text>
             / Product
           </Text>
           <View style={styles.headerCont}>
@@ -49,7 +325,13 @@ const Location = () => {
               >
                 Copy Product
               </Button>
-              <Button containerStyle={{ width: 100 }}>Save</Button>
+              <Button
+                onPress={handleAddProduct}
+                containerStyle={{ width: 100 }}
+                loading={uploading}
+              >
+                Save
+              </Button>
             </View>
           </View>
         </>
@@ -72,68 +354,157 @@ const Location = () => {
             )}
             <Text style={styles.photoLabel}>Basic Details</Text>
             <Divider style={{ marginVertical: 20 }} />
-            <View style={{ flexDirection: "row", gap: 10, height: 200 }}>
-              <View style={styles.imageButton}>
-                <Ionicons name="add" size={28} color="gray" />
-                <Text>Add Image</Text>
-              </View>
+            <View
+              style={{
+                flexDirection: "row",
+                gap: 10,
+                marginBottom: 15,
+                height: 200,
+              }}
+            >
+              <TouchableOpacity
+                onPress={() => pickImage(1)}
+                style={styles.imageButton}
+              >
+                {image.url ? (
+                  <Image style={styles.image} source={{ uri: image.url }} />
+                ) : (
+                  <>
+                    <Ionicons name="add" size={28} color="gray" />
+                    <Text>Add Image</Text>
+                  </>
+                )}
+              </TouchableOpacity>
               <View style={{ flex: 1 }}>
                 <View style={{ flexDirection: "row", flex: 1, gap: 10 }}>
-                  <View style={styles.imageButton}>
-                    <Ionicons name="add" size={28} color="gray" />
-                  </View>
-                  <View style={styles.imageButton}>
-                    <Ionicons name="add" size={28} color="gray" />
-                  </View>
+                  <TouchableOpacity
+                    onPress={() => pickImage(2)}
+                    style={styles.imageButton}
+                  >
+                    {image2.url ? (
+                      <Image
+                        style={styles.image}
+                        source={{ uri: image2.url }}
+                      />
+                    ) : (
+                      <Ionicons name="add" size={28} color="gray" />
+                    )}
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => pickImage(3)}
+                    style={styles.imageButton}
+                  >
+                    {image3.url ? (
+                      <Image
+                        style={styles.image}
+                        source={{ uri: image3.url }}
+                      />
+                    ) : (
+                      <Ionicons name="add" size={28} color="gray" />
+                    )}
+                  </TouchableOpacity>
                 </View>
                 <View style={{ flexDirection: "row", flex: 1, gap: 10 }}>
-                  <View style={styles.imageButton}>
-                    <Ionicons name="add" size={28} color="gray" />
-                  </View>
-                  <View style={styles.imageButton}>
-                    <Ionicons name="add" size={28} color="gray" />
-                  </View>
+                  <TouchableOpacity
+                    onPress={() => pickImage(4)}
+                    style={styles.imageButton}
+                  >
+                    {image4.url ? (
+                      <Image
+                        style={styles.image}
+                        source={{ uri: image4.url }}
+                      />
+                    ) : (
+                      <Ionicons name="add" size={28} color="gray" />
+                    )}
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => pickImage(5)}
+                    style={styles.imageButton}
+                  >
+                    {image5.url ? (
+                      <Image
+                        style={styles.image}
+                        source={{ uri: image5.url }}
+                      />
+                    ) : (
+                      <Ionicons name="add" size={28} color="gray" />
+                    )}
+                  </TouchableOpacity>
                 </View>
               </View>
             </View>
+            {errors.images ? (
+              <Text style={styles.errorText}>{errors.images}</Text>
+            ) : null}
+
             <TextInput
               mode="outlined"
-              label="Product Nane"
-              value={email}
-              onChangeText={(text) => setEmail(text)}
+              label="Product Name"
+              value={formData.name}
+              onChangeText={(text) => handleInputChange("name", text)}
               style={styles.input}
             />
+            {errors.name ? (
+              <Text style={styles.errorText}>{errors.name}</Text>
+            ) : null}
+
             <TextInput
               mode="outlined"
               label="Product Description"
-              value={email}
-              onChangeText={(text) => setEmail(text)}
+              value={formData.description}
+              onChangeText={(text) => handleInputChange("description", text)}
               style={{ marginBottom: 20, height: 100 }}
               multiline
               numberOfLines={3}
-              maxLength={100}
+              maxLength={200}
             />
+
+            {errors.description ? (
+              <Text style={styles.errorText}>{errors.description}</Text>
+            ) : null}
             <View>
               <TextInput
                 mode="outlined"
                 label="Price"
-                value={email}
-                onChangeText={(text) => setEmail(text)}
+                keyboardType="numeric"
+                value={`${formData.price}`}
+                onChangeText={(text) => handleInputChange("price", text)}
                 style={[styles.input, { paddingLeft: 20 }]}
               />
+
               <FontAwesome style={styles.currency} name="dollar" size={20} />
+
+              {errors.price ? (
+                <Text style={styles.errorText}>{errors.price}</Text>
+              ) : null}
             </View>
-            <Select
-              placeholder="Location Name"
-              options={[]}
-              onValueChange={() => {}}
-              containerStyle={styles.select}
-            />
-            <Select
+            {locations.map((value, index) => (
+              <Select
+                key={index}
+                placeholder="Location Name"
+                selectedValue={value}
+                options={userLocations.map((location) => ({
+                  label: location.locationName,
+                  value: location._id,
+                }))}
+                onValueChange={(value) =>
+                  handleLocationChange(index, value as string)
+                }
+                containerStyle={styles.select}
+                error={errors.location}
+              />
+            ))}
+            <MultiSelect
               placeholder="Menu Category"
-              options={[]}
-              onValueChange={() => {}}
+              options={["Men Shirts", "Shorts", "Women shirts", "Jacket"].map(
+                (option) => ({ label: option, value: option })
+              )}
+              onValuesChange={(value) =>
+                handleInputChange("mainCategory", value)
+              }
               containerStyle={styles.select}
+              error={errors.mainCategory}
             />
             <View
               style={{
@@ -141,7 +512,7 @@ const Location = () => {
                 alignItems: "flex-start",
               }}
             >
-              <PaperButton mode="text" icon={"plus"}>
+              <PaperButton onPress={addLocation} mode="text" icon={"plus"}>
                 Add Additional Location
               </PaperButton>
             </View>
@@ -157,20 +528,32 @@ const Location = () => {
             >
               <Text style={styles.photoLabel}>Product Details</Text>
               <Divider style={{ marginVertical: 20 }} />
+              {isMobile && (
+                <Text
+                  style={[
+                    { fontWeight: "600", fontSize: 16, marginBottom: 10 },
+                  ]}
+                >
+                  Product Category
+                </Text>
+              )}
               <View
                 style={{
                   flexDirection: "row",
                   alignItems: "center",
                   gap: 10,
-                  marginBottom: 15,
+                  marginBottom: 20,
                 }}
               >
-                <Text style={{ flex: 1 }}>Product Category</Text>
+                {!isMobile && <Text style={{ flex: 1 }}>Product Category</Text>}
                 <MultiSelect
-                  onValuesChange={(value) => setCategory(value)}
+                  onValuesChange={(value) =>
+                    handleInputChange("category", value)
+                  }
                   options={categoriesOption}
                   placeholder="Category"
                   containerStyle={{ flex: 2 }}
+                  error={errors.category}
                 />
               </View>
               <View
@@ -178,49 +561,71 @@ const Location = () => {
                   flexDirection: "row",
                   alignItems: "center",
                   gap: 10,
-                  marginBottom: 15,
+                  marginBottom: 20,
                 }}
               >
-                <Text style={{ flex: 1 }}>Subcategory</Text>
+                {!isMobile && <Text style={{ flex: 1 }}>Subcategory</Text>}
                 <MultiSelect
-                  onValuesChange={(value) => setCategory(value)}
-                  options={categoriesOption}
+                  onValuesChange={(value) =>
+                    handleInputChange("subCategory", value)
+                  }
+                  options={subCategoriesOption}
                   placeholder="Subcategory"
                   containerStyle={{ flex: 2 }}
+                  error={errors.subCategory}
                 />
               </View>
               <Divider style={{ marginVertical: 20 }} />
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 10,
-                  marginBottom: 15,
-                }}
-              >
-                <Text style={{ flex: 1 }}>Option 1</Text>
-                <MultiSelect
-                  onValuesChange={(value) => setCategory(value)}
-                  options={categoriesOption}
-                  placeholder="Option Category"
-                  containerStyle={{ flex: 1 }}
-                  inputStyle={{ fontSize: 13 }}
-                />
-                <MultiSelect
-                  onValuesChange={(value) => setCategory(value)}
-                  options={categoriesOption}
-                  placeholder="Option Name"
-                  containerStyle={{ flex: 1 }}
-                  inputStyle={{ fontSize: 13 }}
-                />
-              </View>
+              {productOptions.map((option, index) => (
+                <View
+                  key={index}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 10,
+                    marginBottom: 15,
+                  }}
+                >
+                  <Text style={{ flex: 1 }}>Option {index + 1}</Text>
+                  <Select
+                    onValueChange={(value) =>
+                      handleOptionChange(
+                        index,
+                        "optionCategory",
+                        value as string
+                      )
+                    }
+                    options={[
+                      { label: "Color", value: "color" },
+                      { label: "Size", value: "size" },
+                    ]}
+                    selectedValue={option.optionCategory}
+                    placeholder="Option Category"
+                    containerStyle={{ flex: 1 }}
+                    inputStyle={{ fontSize: 13 }}
+                  />
+                  <Select
+                    onValueChange={(value) =>
+                      handleOptionChange(index, "optionName", value as string)
+                    }
+                    options={[
+                      { label: "Red", value: "red" },
+                      { label: "Blue", value: "blue" },
+                    ]}
+                    selectedValue={option.optionName}
+                    placeholder="Option Name"
+                    containerStyle={{ flex: 1 }}
+                    inputStyle={{ fontSize: 13 }}
+                  />
+                </View>
+              ))}
               <View
                 style={{
                   justifyContent: "flex-start",
                   alignItems: "flex-start",
                 }}
               >
-                <PaperButton mode="text" icon={"plus"}>
+                <PaperButton mode="text" icon={"plus"} onPress={addOption}>
                   Add Another Option
                 </PaperButton>
               </View>
@@ -245,14 +650,22 @@ const Location = () => {
                 }}
               >
                 <Text>Available Online</Text>
-                <Checkbox.Android status="checked" />
+                <Checkbox.Android
+                  status={formData.availableOnline ? "checked" : "unchecked"}
+                  onPress={() =>
+                    handleCheckboxChange(
+                      "availableOnline",
+                      !formData.availableOnline
+                    )
+                  }
+                />
               </View>
 
               <TextInput
                 mode="outlined"
                 label="Product Web Url"
-                value={email}
-                onChangeText={(text) => setEmail(text)}
+                value={formData.productUrl}
+                onChangeText={(text) => handleInputChange("productUrl", text)}
                 style={styles.input}
               />
               <View
@@ -264,7 +677,10 @@ const Location = () => {
                 }}
               >
                 <Text>Product Ships</Text>
-                <Checkbox.Android status="checked" />
+                <Checkbox.Android
+                  status={formData.ships ? "checked" : "unchecked"}
+                  onPress={() => handleCheckboxChange("ships", !formData.ships)}
+                />
               </View>
 
               <View
@@ -276,7 +692,15 @@ const Location = () => {
                 }}
               >
                 <Text>Pick-Up Available</Text>
-                <Checkbox.Android status="checked" />
+                <Checkbox.Android
+                  status={formData.pickupAvailable ? "checked" : "unchecked"}
+                  onPress={() =>
+                    handleCheckboxChange(
+                      "pickupAvailable",
+                      !formData.pickupAvailable
+                    )
+                  }
+                />
               </View>
               <Divider style={{ marginVertical: 20 }} />
 
@@ -289,20 +713,31 @@ const Location = () => {
                 }}
               >
                 <Text>In Shop Only</Text>
-                <Checkbox.Android status="checked" />
+                <Checkbox.Android
+                  status={formData.inShopOnly ? "checked" : "unchecked"}
+                  onPress={() =>
+                    handleCheckboxChange("inShopOnly", !formData.inShopOnly)
+                  }
+                />
               </View>
             </View>
           </View>
         </View>
         {Platform.OS !== "web" && (
-          <Button containerStyle={{ marginBottom: 15 }}>Save</Button>
+          <Button
+            containerStyle={{ marginBottom: 15 }}
+            onPress={handleAddProduct}
+            loading={uploading}
+          >
+            Save
+          </Button>
         )}
       </ScrollView>
     </View>
   );
 };
 
-export default Location;
+export default AddProduct;
 
 const styles = StyleSheet.create({
   container: {
@@ -342,14 +777,9 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     flex: 1,
   },
-  imageCircle: {
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: 50,
-    height: 100,
-    minWidth: 100,
-    borderWidth: 3,
-    borderColor: "white",
+  image: {
+    width: "100%",
+    height: "100%",
   },
   photoButton: {
     backgroundColor: "white",
@@ -382,11 +812,16 @@ const styles = StyleSheet.create({
   },
   select: {
     backgroundColor: "white",
-    marginBottom: 20,
+    marginBottom: 25,
   },
   currency: {
     position: "absolute",
     left: 10,
     top: 20,
+  },
+  errorText: {
+    color: "red",
+    marginTop: -20,
+    marginBottom: 10,
   },
 });

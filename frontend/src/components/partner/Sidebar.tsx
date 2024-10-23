@@ -77,7 +77,7 @@ export const navList: {
     path: "/polls",
   },
   {
-    name: "PinPoint Social",
+    name: "Pinpoint Social",
     icon: "location-outline",
     iconType: Ionicons,
     path: "/socials",
@@ -148,7 +148,7 @@ const Sidebar = () => {
                   isActive ? styles.activeItem : null, // Apply active styles
                 ]}
               >
-                {item.name !== "PinPoint Social" ? (
+                {item.name !== "Pinpoint Social" ? (
                   <item.iconType
                     name={item.icon}
                     size={20}
@@ -156,7 +156,7 @@ const Sidebar = () => {
                   />
                 ) : (
                   <Image
-                    source={require("../../../assets/images/logo1.png")}
+                    source={require("../../../assets/images/logo_gray.png")}
                     style={[{ height: 24, width: 24 }]}
                     resizeMode="contain"
                   />

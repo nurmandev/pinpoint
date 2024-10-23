@@ -1,5 +1,5 @@
 import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Checkbox, Divider, useTheme } from "react-native-paper";
 import Button from "@/src/components/Button";
 import { router } from "expo-router";
@@ -9,9 +9,46 @@ import { products, rated } from "@/src/utils/data/product";
 import Rating from "@/src/components/Rating";
 import Modal from "@/src/components/modals/modal";
 import Details from "@/src/components/partner/product/details";
+import { useProduct } from "@/src/context/Product";
+import { IProduct } from "@/src/types/product";
+import ProductDetailWeb from "@/src/components/partner/product/webDetail";
 
 const Location = () => {
   const { colors } = useTheme();
+  const { fetchProducts } = useProduct();
+  const [products, setProducts] = useState<IProduct[]>([]);
+  const [rated, setRated] = useState<IProduct[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const getProducts = async () => {
+      try {
+        setLoading(true);
+        const result = await fetchProducts({});
+        setProducts(result);
+      } catch (error: any) {
+        setError(error as string);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const getRatedProducts = async () => {
+      try {
+        setLoading(true);
+        const result = await fetchProducts({});
+        setRated(result);
+      } catch (error: any) {
+        setError(error as string);
+      } finally {
+        setLoading(false);
+      }
+    };
+    getProducts();
+    getRatedProducts();
+  }, []);
+
   return (
     <View style={styles.container}>
       <Text style={styles.breadcrum}>
@@ -59,27 +96,35 @@ const Location = () => {
           <ScrollView style={styles.tableBody}>
             {products.map((item) => (
               <Modal
-                key={item.id}
+                key={item._id}
                 button={
                   <View style={styles.tableRow}>
                     <Text style={styles.tableCell}>{item.name}</Text>
                     <Text style={styles.tableCell}>{item.price}</Text>
-                    <Text style={styles.tableCell}>{item.location}</Text>
+                    <Text style={styles.tableCell}>
+                      {item.location.map((loc) => loc.locationName).join(", ")}
+                    </Text>
                     <Text style={styles.tableCell}>{item.category}</Text>
                     <Text style={styles.tableCell}>{item.subCategory}</Text>
                     <Text style={styles.tableCell}>
-                      <Text style={styles.variant}>Male</Text>
-                      <Text style={styles.variant}>White</Text>
+                      {item.options?.map((option) => (
+                        <Text style={styles.variant}> {option.optionName}</Text>
+                      ))}
                     </Text>
                     <View style={styles.actionButtons}>
                       <Feather name="link" size={20} color="gray" />
-                      <Feather name="edit" size={20} color="gray" />
+                      <Feather
+                        name="edit"
+                        size={20}
+                        color="gray"
+                        onPress={() => router.push("/products/add")}
+                      />
                       <Ionicons name="trash-outline" size={20} color="red" />
                     </View>
                   </View>
                 }
               >
-                <Details />
+                {(close) => <ProductDetailWeb id={item._id} />}
               </Modal>
             ))}
           </ScrollView>
@@ -87,7 +132,7 @@ const Location = () => {
         <View
           style={{ backgroundColor: "white", padding: 20, borderRadius: 10 }}
         >
-          <Text style={styles.subTitle}>Rated Product</Text>
+          <Text style={styles.subTitle}>Reviewed Product</Text>
           <View
             style={[
               styles.tableHeader,
@@ -108,22 +153,25 @@ const Location = () => {
           {/* Table Rows */}
           <ScrollView style={styles.tableBody}>
             {rated.map((item) => (
-              <View style={styles.tableRow} key={item.id}>
+              <View style={styles.tableRow} key={item._id}>
                 <Text style={styles.tableCell}>{item.name}</Text>
                 <Text style={styles.tableCell}>
-                  <Text style={styles.variant}>Male</Text>
-                  <Text style={styles.variant}>White</Text>
+                  {item.options?.map((option) => (
+                    <Text style={styles.variant}> {option.optionName}</Text>
+                  ))}
                 </Text>
                 <Text style={styles.tableCell}>{item.price}</Text>
-                <Text style={styles.tableCell}>{item.customer}</Text>
-                <Text style={styles.tableCell}>{item.date}</Text>{" "}
+                <Text style={styles.tableCell}>Customer name</Text>
+                <Text style={styles.tableCell}>12/12/24</Text>
                 <View style={[styles.actionButtons]}>
                   <Rating rating={item.rating} show={false} />
                 </View>
-                <Text style={styles.tableCell}>{item.description}</Text>
+                <Text style={styles.tableCell} numberOfLines={2}>
+                  {item.description}
+                </Text>
                 <View style={styles.actionButtons}>
                   <Image
-                    source={require("../../../../../assets/images/product.png")}
+                    source={{ uri: item.images[0] }}
                     style={styles.mainImage}
                     resizeMode="cover"
                   />

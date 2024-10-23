@@ -4,8 +4,10 @@ import { Appbar, useTheme } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
 import Button from "@/src/components/Button";
 import { router } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 
 const Success = () => {
+  const { name, id } = useLocalSearchParams();
   const { colors } = useTheme();
   return (
     <View
@@ -25,9 +27,11 @@ const Success = () => {
         Request Submitted to
       </Text>
       <Text style={{ fontSize: 20, fontWeight: "500", marginBottom: 30 }}>
-        Location name
+        {name}
       </Text>
-      <Button onPress={() => router.push("/inquiry/xyz")}>View Inquiry</Button>
+      <Button onPress={() => router.push(`/inquiry/${id}`)}>
+        View Inquiry
+      </Button>
     </View>
   );
 };

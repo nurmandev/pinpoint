@@ -1,13 +1,23 @@
-import { StyleSheet, Text, View, Image, TouchableOpacity } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  Image,
+  TouchableOpacity,
+  Pressable,
+} from "react-native";
 import React, { useState } from "react";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { Menu } from "react-native-paper";
+import { Lead } from "@/src/types/lead";
+import { imageURL } from "@/src/services/api";
+import moment from "moment";
 
-const data = [1, 2, 3];
-
-interface Props {}
-const Active: React.FC<Props> = () => {
+interface Props {
+  leads: Lead[];
+}
+const Active: React.FC<Props> = ({ leads }) => {
   const [visible, setVisible] = useState(false);
 
   const openMenu = () => setVisible(true);
@@ -39,22 +49,21 @@ const Active: React.FC<Props> = () => {
   return (
     <View style={styles.section}>
       <View style={{ marginTop: 10 }}>
-        {data.map((item) => (
+        {leads.length <= 0 && <Text>No Active Lead</Text>}
+        {leads.map((item) => (
           <TouchableOpacity
-            onPress={() => router.push("/inquiry/detail")}
+            onPress={() => router.push(`/inquiry/${item._id}`)}
             style={styles.card}
-            key={item}
+            key={item._id}
           >
             <Image
-              source={require("../../../../assets/images/product.png")}
+              source={{ uri: imageURL + item.service.images[0] }}
               style={styles.image}
             />
             <View style={styles.rightSection}>
-              <Text style={styles.name}>Service Name</Text>
-              <Text style={{}}>Location Name</Text>
-              <Text style={{}}>
-                Lorem ipsum dolor sit amet, consectetur adipisci...
-              </Text>
+              <Text style={styles.name}>{item.service.name}</Text>
+              <Text style={{}}>{item.location.locationName}</Text>
+              <Text style={{}}>{item.service.description}</Text>
 
               <View
                 style={{
@@ -62,8 +71,25 @@ const Active: React.FC<Props> = () => {
                   justifyContent: "space-between",
                 }}
               >
-                <Text style={{}}>07/12/24, 09:00pm </Text>
-                {/* <Text>Leave a Review</Text> */}
+                <Text style={{}}>
+                  {moment(item.serviceRequestDate).calendar()}{" "}
+                </Text>
+                <Pressable
+                  onPress={() =>
+                    router.push({
+                      pathname: "/inquiry/review",
+                      params: {
+                        id: item?.service._id,
+                        image: item?.service.images[0],
+                        serviceName: item?.service.name,
+                      },
+                    })
+                  }
+                  style={{ flexDirection: "row", gap: 4, alignItems: "center" }}
+                >
+                  <MaterialCommunityIcons name="comment-edit-outline" />
+                  <Text>Leave a Review</Text>
+                </Pressable>
               </View>
             </View>
           </TouchableOpacity>
@@ -92,7 +118,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   image: { width: 80, height: 80, borderRadius: 10 },
-  rightSection: { gap: 5 },
+  rightSection: { gap: 5, flex: 1 },
   name: { fontSize: 16, fontWeight: "500" },
   optionButton: { position: "absolute", top: 5, right: 15 },
 });

@@ -16,7 +16,7 @@ type ButtonVariant = "contained" | "outlined";
 
 type CustomButtonProps = {
   children: React.ReactNode;
-  onPress?: (event: GestureResponderEvent) => void;
+  onPress?: (event?: GestureResponderEvent) => void;
   containerStyle?: StyleProp<ViewStyle>;
   textStyle?: StyleProp<TextStyle>;
   loading?: boolean;
@@ -45,7 +45,7 @@ const Button: React.FC<CustomButtonProps> = ({
         disabled && styles.disabledButton,
         containerStyle,
       ]}
-      onPress={onPress}
+      onPress={() => ((!loading || !disabled) && onPress ? onPress() : null)}
       disabled={disabled || loading}
       activeOpacity={0.7}
     >

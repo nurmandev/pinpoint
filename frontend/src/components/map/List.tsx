@@ -10,57 +10,15 @@ import React, { useState } from "react";
 import { AntDesign, Ionicons, SimpleLineIcons } from "@expo/vector-icons";
 import Rating from "../Rating";
 import { lightColors } from "@/src/utils/colors";
+import { Location } from "@/src/types/location";
+import { imageURL } from "@/src/services/api";
 
-const data = [
-  {
-    id: "1",
-    image: require("../../../assets/images/feeds/feed2.png"),
-    name: "The Burger Place",
-    address: "Yori house, Rivers Street",
-    info: "12 mi from you",
-  },
-  {
-    id: "1",
-    image: require("../../../assets/images/feeds/feed2.png"),
-    name: "The Burger Place",
-    address: "Yori house, Rivers Street",
-    info: "12 mi from you",
-  },
-  {
-    id: "1",
-    image: require("../../../assets/images/feeds/feed2.png"),
-    name: "The Burger Place",
-    address: "Yori house, Rivers Street",
-    info: "12 mi from you",
-  },
-  {
-    id: "1",
-    image: require("../../../assets/images/feeds/feed2.png"),
-    name: "The Burger Place",
-    address: "Yori house, Rivers Street",
-    info: "12 mi from you",
-  },
-  {
-    id: "1",
-    image: require("../../../assets/images/feeds/feed2.png"),
-    name: "The Burger Place",
-    address: "Yori house, Rivers Street",
-    info: "12 mi from you",
-  },
-  {
-    id: "1",
-    image: require("../../../assets/images/feeds/feed2.png"),
-    name: "The Burger Place",
-    address: "Yori house, Rivers Street",
-    info: "12 mi from you",
-  },
-];
-const List = () => {
+const List: React.FC<{ data: Location[] }> = ({ data }) => {
   return (
     <View>
       <FlatList
         data={data}
-        keyExtractor={(item, index) => index.toString()}
+        keyExtractor={(item) => item._id.toString()}
         renderItem={({ item }) => <RenderItem item={item} />}
         style={{ padding: 16 }}
       />
@@ -68,20 +26,25 @@ const List = () => {
   );
 };
 
-const RenderItem = ({ item }: any) => {
+const RenderItem = ({ item }: { item: Location }) => {
   const [liked, setLiked] = useState(true);
   return (
     <View style={styles.userContainer}>
-      <Image source={item.image} style={styles.profileImage} />
+      <Image
+        source={{ uri: imageURL + item.images[0] }}
+        style={styles.profileImage}
+      />
       <View style={styles.locationInfo}>
-        <Text style={styles.locationName}>{item.name}</Text>
-        <Text style={styles.address}>{item.address}</Text>
+        <Text style={styles.locationName}>{item.locationName}</Text>
+        <Text style={styles.address} numberOfLines={2}>
+          {item.address}
+        </Text>
 
         <Text style={{ marginBottom: 3 }}>
           <Text style={{ color: "#07d64c", fontWeight: "bold" }}>Open</Text>{" "}
           till 5:00pm
         </Text>
-        <Text style={{}}>{item.info}</Text>
+        {/* <Text style={{}}>{item.info}</Text>//distance between two points */}
       </View>
       <View
         style={{

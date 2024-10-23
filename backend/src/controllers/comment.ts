@@ -52,35 +52,37 @@ export const getPostComments = async (req: CustomRequest, res: Response) => {
 
   try {
     // Find all comments for the post
-    const comments = await Comment.find({ postId })
+    const comments: any = await Comment.find({ postId })
       .populate("userId", "username avatarUrl")
-      .sort({ createdAt: -1 }); // Sort by creation time, latest first
+      .sort({ createdAt: 1 }); // Sort by creation time, oldest first
 
-    // if (!comments.length) {
-    //   res.status(404).json({ message: "No comments found for this post" });
-    //   return;
-    // }
-    console.log(comments.length);
+    // Create a map to store comments by their ID
+    const commentMap: Record<string, any> = {};
+
     // Organize comments into parent and replies
-    const organizedComments = comments.reduce((acc: any, comment: any) => {
-      comment.parentCommentId;
-      if (!comment.parentCommentId) {
-        // It's a parent comment
-        acc.push({
-          ...comment.toObject(),
-          replies: [],
-        });
-      } else {
-        // It's a reply
-        const parentComment = acc.find((parent: any) =>
-          parent._id.equals(comment.parentCommentId)
-        );
-        if (parentComment) {
-          parentComment.replies.push(comment.toObject());
+    comments.forEach(
+      (comment: {
+        toObject: () => any;
+        _id: string | number;
+        parentCommentId: string | number;
+      }) => {
+        const commentObj = { ...comment.toObject(), replies: [] };
+        commentMap[comment._id] = commentObj;
+
+        if (comment.parentCommentId) {
+          // If it's a reply, find the parent and add it to the replies array
+          const parentComment = commentMap[comment.parentCommentId];
+          if (parentComment) {
+            parentComment.replies.push(commentObj);
+          }
         }
       }
-      return acc;
-    }, []);
+    );
+
+    // Filter out only the parent comments (no `parentCommentId`)
+    const organizedComments = Object.values(commentMap).filter(
+      (comment) => !comment.parentCommentId
+    );
 
     res.status(200).json({ comments: organizedComments });
   } catch (error) {

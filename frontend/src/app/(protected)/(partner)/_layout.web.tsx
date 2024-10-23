@@ -81,7 +81,7 @@ export default function Layout() {
                         />
                       }
                     >
-                      <AddPost />
+                      {(close) => <AddPost onClose={close} />}
                     </Modal>
                     <Menu.Item
                       leadingIcon="movie-open-play-outline"
@@ -234,7 +234,7 @@ export default function Layout() {
           drawerLabel: "Pinpoint Social",
           drawerIcon: ({ color }) => (
             <Image
-              source={require("../../../../assets/images/logo1.png")}
+              source={require("../../../../assets/images/logo_gray.png")}
               style={[{ height: 24, width: 24 }]}
               resizeMode="contain"
             />
