@@ -21,7 +21,13 @@ interface LeadContextState {
   addLeadNote: (leadId: string, note: string) => Promise<Lead>;
   updateStatus: (
     leadId: string,
-    data: { status: string; reason?: string; offer?: string }
+    data: {
+      status: string;
+      reason?: string;
+      time?: string;
+      date?: string;
+      price?: string;
+    }
   ) => Promise<Lead>;
 }
 
@@ -87,7 +93,13 @@ export const LeadProvider = ({ children }: { children: ReactNode }) => {
 
   const updateStatus = async (
     leadId: string,
-    data: { status: string; reason?: string; offer?: string }
+    data: {
+      status: string;
+      reason?: string;
+      time?: string;
+      date?: string;
+      price?: string;
+    }
   ) => {
     try {
       const updatedLead = await updateLeadStatus(leadId, data);

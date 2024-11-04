@@ -11,7 +11,7 @@ import { RegistrationData } from "../types/auth";
 interface AuthContextType {
   loading: boolean;
   onboardingCompleted: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string, role: string) => Promise<void>;
   register: (data: RegistrationData) => Promise<void>;
   verifyEmail: (email: string, code: string) => Promise<void>;
   completeOnboarding: () => void;
@@ -46,9 +46,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     bootstrapAsync();
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string, role: string) => {
     try {
-      const response = await loginSerrvice(email, password);
+      const response = await loginSerrvice(email, password, role);
       await storeData("token", response.token);
       getUser();
     } catch (error) {

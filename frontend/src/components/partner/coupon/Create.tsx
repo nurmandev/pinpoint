@@ -9,7 +9,7 @@ import { router } from "expo-router";
 import useDimensions from "@/src/hooks/useDimension";
 
 interface Props {
-  onClose: () => void;
+  onClose?: () => void;
 }
 
 const Create: React.FC<Props> = ({ onClose }) => {
@@ -17,12 +17,16 @@ const Create: React.FC<Props> = ({ onClose }) => {
   const { isMobile } = useDimensions();
   return (
     <View>
-      <Appbar.Header>
-        <Appbar.BackAction
-          onPress={() => (isMobile ? router.back() : onClose())}
-        />
-        <Appbar.Content title="Generate Coupon" />
-      </Appbar.Header>
+      {!isMobile && (
+        <Appbar.Header>
+          <Appbar.BackAction
+            onPress={() =>
+              isMobile ? router.back() : onClose ? onClose() : null
+            }
+          />
+          <Appbar.Content title="Generate Coupon" />
+        </Appbar.Header>
+      )}
       <Divider style={{ marginVertical: 20 }} />
       <View style={{ paddingHorizontal: 20 }}>
         <View style={styles.imageCont}>

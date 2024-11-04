@@ -4,50 +4,55 @@ interface ILead extends Document {
   customerName: string;
   email: string;
   phone: string;
-  contactMethod: "text" | "email" | "call"; // Specify the types for contact method
+  contactMethod: "text" | "email" | "call";
   address: string;
-  serviceRequestDate: Date; // Consider using Date type for the date field
-  details: string; // Details about the service requested
+  serviceRequestDate: Date;
+  details: string;
   location: Schema.Types.ObjectId;
-  service: Schema.Types.ObjectId;
+  item: Schema.Types.ObjectId;
   partner: Schema.Types.ObjectId;
   conversationId?: Schema.Types.ObjectId;
   user: Schema.Types.ObjectId;
   uploadedMedia?: string[];
-  status: "Pending" | "Active" | "Pool" | "Complete";
+  status: "Pending" | "Active" | "Pool" | "Complete" | "Website Click";
   reason?: string;
   note: string;
-  offer?: string;
+  modifyDate?: Date;
+  modifyTime?: string;
+  modifyPrice?: string;
   dateCompleted?: Date;
+  rating: number;
 }
 
 const LeadSchema: Schema<ILead> = new Schema(
   {
     customerName: { type: String, required: true },
     email: { type: String, required: true, lowercase: true, trim: true },
-    phone: { type: String, required: true },
+    phone: { type: String },
     contactMethod: {
       type: String,
       enum: ["text", "email", "call"],
-      required: true,
     },
-    address: { type: String, required: true },
+    address: { type: String },
     serviceRequestDate: { type: Date, required: true },
     details: { type: String, required: true },
     location: { type: Schema.Types.ObjectId, ref: "Location" },
-    service: { type: Schema.Types.ObjectId, ref: "Service" },
+    item: { type: Schema.Types.ObjectId, ref: "Item" },
     user: { type: Schema.Types.ObjectId, ref: "User" },
     conversationId: { type: Schema.Types.ObjectId, ref: "Conversation" },
     partner: { type: Schema.Types.ObjectId, ref: "User" },
     uploadedMedia: { type: [String], default: [] },
     status: {
       type: String,
-      enum: ["Pending", "Active", "Complete"],
+      enum: ["Pending", "Active", "Complete", "Pool", "Website Click"],
       default: "Pending",
     },
     reason: { type: String },
     note: { type: String },
-    offer: { type: String },
+    modifyDate: { type: String },
+    modifyTime: { type: String },
+    modifyPrice: { type: String },
+    rating: { type: Number, default: 0 },
     dateCompleted: { type: String },
   },
   { timestamps: true }

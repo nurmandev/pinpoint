@@ -22,16 +22,15 @@ const s3Client = new S3Client({
 });
 
 export const uploadMediaToS3 = async (
-  filePath: string,
+  fileBuffer: Buffer,
   fileName: string,
   mediaType: string
 ): Promise<{ url: string; type: string }> => {
-  const fileStream = fs.createReadStream(filePath);
   const key = `${uuidv4()}_${fileName}`;
   const uploadParams = {
     Bucket: bucket,
     Key: key,
-    Body: fileStream,
+    Body: fileBuffer,
     ContentType: mediaType === "image" ? "image/jpeg" : "video/mp4",
   };
 
@@ -42,9 +41,6 @@ export const uploadMediaToS3 = async (
   } catch (err) {
     console.error("Error uploading file to S3:", err);
     throw new Error("Could not upload file to S3");
-  } finally {
-    // Clean up temporary file
-    fs.unlinkSync(filePath);
   }
 };
 
@@ -72,17 +68,7 @@ export const downloadMediaFromS3 = async (key: string) => {
 
     const command = new GetObjectCommand(params);
     const response = await s3Client.send(command);
-    if (!response.Body) {
-      throw new Error(`Image not found`);
-    }
-    const str = await response.Body.transformToByteArray();
-
-    const bodyBuffer = Buffer.from(str);
-
-    return {
-      contentType: response.ContentType,
-      bodyBuffer,
-    };
+    return response;
   } catch (error: any) {
     throw new Error(`Could not download media from S3: ${error.message}`);
   }

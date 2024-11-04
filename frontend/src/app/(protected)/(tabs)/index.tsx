@@ -1,6 +1,6 @@
 import { FlatList, SafeAreaView, StyleSheet, View, Image } from "react-native";
 import React from "react";
-import { Appbar, Divider, Menu } from "react-native-paper";
+import { Appbar, Menu } from "react-native-paper";
 import FeedItem from "@/src/components/social/FeedItem";
 import HeaderStories from "@/src/components/social/HeaderStories";
 import { router } from "expo-router";
@@ -53,7 +53,7 @@ const Social = () => {
         <Appbar.Action icon="magnify" onPress={() => {}} />
         <Appbar.Action
           icon="bell-outline"
-          onPress={() => router.push("notification")}
+          onPress={() => router.push("/notification")}
         />
         <Appbar.Action
           icon="email-outline"

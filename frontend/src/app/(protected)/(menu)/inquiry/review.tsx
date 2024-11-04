@@ -18,7 +18,7 @@ import { useToastNotification } from "@/src/context/ToastNotificationContext";
 import { useLocalSearchParams } from "expo-router";
 import { imageURL } from "@/src/services/api";
 import { useUser } from "@/src/context/User";
-import { submitReview } from "@/src/services/service";
+import { submitReview } from "@/src/services/lead";
 
 const Review = () => {
   const { colors } = useTheme();
@@ -105,7 +105,7 @@ const Review = () => {
       name,
       rating,
       content: review,
-      photo, // Include photo if uploaded
+      image: photo, // Include photo if uploaded
     };
     try {
       setLoading(true);

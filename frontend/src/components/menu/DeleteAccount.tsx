@@ -3,7 +3,7 @@ import React from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "react-native-paper";
 
-const DeleteAccount = () => {
+const DeleteAccount: React.FC<{ close: () => void }> = ({ close }) => {
   const { colors } = useTheme();
   return (
     <View style={{ justifyContent: "center", alignItems: "center", gap: 20 }}>
@@ -28,6 +28,7 @@ const DeleteAccount = () => {
         </TouchableOpacity>
 
         <TouchableOpacity
+          onPress={close}
           style={{
             borderWidth: 1,
             borderColor: "#f00",

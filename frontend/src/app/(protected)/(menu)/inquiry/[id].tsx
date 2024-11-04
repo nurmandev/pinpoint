@@ -80,7 +80,7 @@ const Inquiry = () => {
   );
 
   const availableOptions = [
-    lead?.service?.homeService && "In-Home Service",
+    lead?.item?.homeService && "In-Home Service",
   ].filter(Boolean);
 
   const onChat = async () => {
@@ -122,7 +122,7 @@ const Inquiry = () => {
       >
         <View style={styles.selectedItem}>
           <Image
-            source={{ uri: imageURL + lead?.service.images[0] }}
+            source={{ uri: imageURL + lead?.item.images[0] }}
             style={styles.mainImage}
             resizeMode="cover"
           />
@@ -130,7 +130,7 @@ const Inquiry = () => {
         <View style={styles.userDetail}>
           <View style={styles.name}>
             <Text style={styles.fullname}>{lead?.location.locationName}</Text>
-            <Text style={styles.username}>{lead?.service.name}</Text>
+            <Text style={styles.username}>{lead?.item.name}</Text>
           </View>
           {goingToChat ? (
             <ActivityIndicator />
@@ -155,7 +155,7 @@ const Inquiry = () => {
         </View>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Details</Text>
-          <Text style={styles.sectionText}>{lead?.service.description}</Text>
+          <Text style={styles.sectionText}>{lead?.item.description}</Text>
 
           <Text
             style={[
@@ -163,9 +163,9 @@ const Inquiry = () => {
               { marginTop: 10, fontWeight: "bold", fontSize: 20 },
             ]}
           >
-            {lead?.service?.priceType === "flat"
-              ? `$${lead.service?.price}`
-              : `$${lead?.service?.priceRange?.from} - $${lead?.service?.priceRange?.to}`}
+            {lead?.item?.priceType === "range"
+              ? `$${lead?.item?.priceRange?.from} - $${lead?.item?.priceRange?.to}`
+              : `$${lead?.item?.price}`}
           </Text>
         </View>
         {availableOptions.length > 0 && (
@@ -182,7 +182,7 @@ const Inquiry = () => {
           </View>
         )}
         <View style={styles.section}>
-          {lead?.service?.options?.map((option, index) => (
+          {lead?.item?.options?.map((option, index) => (
             <View
               key={index}
               style={{ flexDirection: "row", marginBottom: 10 }}
@@ -212,15 +212,15 @@ const Inquiry = () => {
             <Text style={styles.sectionTitle}> Urgency:</Text> Important
           </Text>
         </View>
-        {lead?.status === "Active" && (
+        {lead?.reason === "Awaiting Customer Review" && (
           <Text
             onPress={() =>
               router.push({
                 pathname: "/inquiry/review",
                 params: {
-                  id: lead?.service._id,
-                  image: lead?.service.images[0],
-                  serviceName: lead?.service.name,
+                  id: lead?._id,
+                  image: lead?.item.images[0],
+                  serviceName: lead?.item.name,
                 },
               })
             }

@@ -21,7 +21,10 @@ const Complete: React.FC<Props> = ({ close, id, setLead }) => {
 
   const completeLead = async () => {
     try {
-      if (!reason) return;
+      if (!reason) {
+        addNotification({ message: "Select reason", error: true });
+        return;
+      }
       setApproving(true);
       const res = await updateStatus(id, {
         status: "Complete",

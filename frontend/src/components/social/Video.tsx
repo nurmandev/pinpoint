@@ -2,17 +2,17 @@ import { useVideoPlayer, VideoView } from "expo-video";
 import { useEffect, useRef, useState } from "react";
 import { PixelRatio, StyleSheet, View, Button } from "react-native";
 
-const videoSource =
-  "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
+// const videoSource =
+//   "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
 
-const VideoScreen: React.FC<{ videoSource: string }> = ({}) => {
+const VideoScreen: React.FC<{ videoSource: string }> = ({ videoSource }) => {
   const ref = useRef(null);
   const [isPlaying, setIsPlaying] = useState(true);
   const player = useVideoPlayer(videoSource, (player) => {
     player.loop = true;
     player.play();
   });
-
+  console.log(videoSource);
   useEffect(() => {
     const subscription = player.addListener("playingChange", (isPlaying) => {
       setIsPlaying(isPlaying);
@@ -31,7 +31,7 @@ const VideoScreen: React.FC<{ videoSource: string }> = ({}) => {
         player={player}
         // allowsFullscreen
         // allowsPictureInPicture
-        contentFit="cover"
+        contentFit="contain"
       />
       {/* <View style={styles.controlsContainer}>
         <Button

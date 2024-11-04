@@ -8,7 +8,7 @@ import {
   Image,
 } from "react-native";
 import React, { useState } from "react";
-import { Product } from "@/src/types/product";
+import { IProduct } from "@/src/types/product";
 import { AntDesign, Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 
@@ -59,17 +59,20 @@ const data = [
 
 const ProductService = () => {
   return (
-    <FlatList
-      data={data}
-      renderItem={({ item }) => <RenderItem item={item} />}
-      keyExtractor={(item) => item.id}
-      numColumns={2}
-      contentContainerStyle={styles.productGrid}
-    />
+    <View style={{ flex: 1 }}>
+      <Text>No favorite product or service</Text>
+      <FlatList
+        data={[]}
+        renderItem={({ item }) => <RenderItem item={item} />}
+        keyExtractor={(item, index) => index.toString()}
+        numColumns={2}
+        contentContainerStyle={styles.productGrid}
+      />
+    </View>
   );
 };
 
-const RenderItem = ({ item }: { item: Product }) => {
+const RenderItem = ({ item }: { item: any }) => {
   const [liked, setLiked] = useState(true);
   return (
     <TouchableOpacity style={styles.card}>

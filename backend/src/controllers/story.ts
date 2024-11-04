@@ -23,7 +23,7 @@ export const createStory = async (
       for (const file of req.files) {
         const mediaType = file.mimetype.startsWith("image") ? "image" : "video";
         mediaUploadPromises.push(
-          uploadMediaToS3(file.path, file.filename, mediaType)
+          uploadMediaToS3(file.buffer, file.filename, mediaType)
         );
       }
     }
@@ -33,9 +33,9 @@ export const createStory = async (
 
     // Create a new story
     const newStory = new Story({
-      user: userId,
+      userId: userId,
       location,
-      media: mediaUploadResults[0].url,
+      media: mediaUploadResults[0],
       mediaType,
       caption,
     });
@@ -60,24 +60,22 @@ export const getAllStoriesGroupedByUser = async (
   try {
     // Fetch stories that are not archived or deleted and created within the last 24 hours
     const stories = await Story.find({
-      isArchived: false,
-      isDeleted: false,
       createdAt: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) }, // Stories within 24 hours
     })
-      .populate("user", "username avatarUrl")
+      .populate("userId", "username avatarUrl")
       .populate("location", "images locationName address");
     // .sort({ createdAt: -1 });
 
     // Group stories by user
     const groupedStories = stories.reduce((acc: any, story: any) => {
-      const userId = story.user._id;
+      const userId = story.userId._id;
 
       if (!acc[userId]) {
         acc[userId] = {
           _id: userId,
           user: {
-            username: story.user.username,
-            avatarUrl: story.user.avatarUrl,
+            username: story.userId.username,
+            avatarUrl: story.userId.avatarUrl,
           },
           stories: [],
         };

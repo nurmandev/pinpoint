@@ -11,7 +11,7 @@ import {
 import React, { useEffect, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
-import { Appbar, Menu, useTheme } from "react-native-paper";
+import { ActivityIndicator, Appbar, Menu, useTheme } from "react-native-paper";
 import Rating from "@/src/components/Rating";
 import Button from "@/src/components/Button";
 import MultiSelect from "@/src/components/select/MultiSelect";
@@ -20,19 +20,29 @@ import { useProduct } from "@/src/context/Product";
 import { IProduct } from "@/src/types/product";
 import LoadingOverlay from "@/src/components/LoadingOverlay";
 import { imageURL } from "@/src/services/api";
+import { useToastNotification } from "@/src/context/ToastNotificationContext";
+import { useUser } from "@/src/context/User";
+import { createLead, getLeadByItem } from "@/src/services/lead";
+import { useLead } from "@/src/context/Lead";
+import { Lead } from "@/src/types/lead";
+import * as Linking from "expo-linking";
 
 const Detail = () => {
   const { colors } = useTheme();
+  const { user } = useUser();
+  const { updateStatus } = useLead();
+  const { addNotification } = useToastNotification();
   const [visible, setVisible] = React.useState(false);
-  const [showWebsite, setShowWebsite] = useState(false);
   const [message, setMessage] = useState("");
+  const [lead, setLead] = useState<Lead | null>(null);
 
   const { getProduct } = useProduct();
   const { id } = useLocalSearchParams();
   const [product, setProduct] = useState<IProduct | undefined>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  console.log(id);
+  const [creatingLead, setCreatingLead] = useState(false);
+
   useEffect(() => {
     const fetchProduct = async () => {
       try {
@@ -48,6 +58,19 @@ const Detail = () => {
     fetchProduct();
   }, [id]);
 
+  useEffect(() => {
+    const fetchLead = async () => {
+      if (!product?._id) return;
+      try {
+        const response = await getLeadByItem(product?._id, "Pending");
+        setLead(response.lead);
+      } catch (error: any) {
+        setError(error.message);
+      }
+    };
+    fetchLead();
+  }, [product]);
+
   const openMenu = () => setVisible(true);
 
   const closeMenu = () => setVisible(false);
@@ -56,6 +79,66 @@ const Detail = () => {
     product?.availableOnline && "Buy Online",
     product?.ships && "Shipping",
   ].filter(Boolean);
+
+  const handleSubmit = async () => {
+    const currentDate = new Date();
+
+    try {
+      setCreatingLead(true);
+      const leadData = {
+        customerName: user!.username,
+        email: user!.email,
+        address: "",
+        serviceRequestDate: currentDate,
+        details: message || "Hi, is this Product still in stock?",
+        location: product?.location[0]._id || "",
+        item: product?._id || "",
+      };
+
+      const res = await createLead(leadData);
+      setLead(res);
+      // router.replace({
+      //   pathname: "/service-detail/success",
+      //   params: { name: product?.location[0].locationName, id: res._id },
+      // });
+    } catch (error: any) {
+      console.error("Error creating lead:", error);
+      addNotification({ message: error, error: true });
+    } finally {
+      setCreatingLead(false);
+    }
+  };
+
+  const handleWebsiteClick = async () => {
+    try {
+      if (lead?._id) {
+        updateStatus(lead._id, {
+          status: "Website Click",
+        });
+      }
+
+      if (!product?.productUrl) {
+        addNotification({ message: `No product url available`, error: true });
+      } else {
+        const supported = await Linking.canOpenURL(
+          "https://" + product.productUrl
+        );
+        if (supported) {
+          await Linking.openURL("https://" + product.productUrl);
+        } else {
+          addNotification({
+            message: `Can't open this URL: ${product.productUrl}`,
+            error: true,
+          });
+        }
+      }
+    } catch (error: any) {
+      addNotification({
+        message: error.message || error,
+        error: true,
+      });
+    }
+  };
 
   return (
     <View style={{ flex: 1 }}>
@@ -243,9 +326,9 @@ const Detail = () => {
             </View>
           </ScrollView>
           <View style={styles.inputContainer}>
-            {showWebsite ? (
+            {lead ? (
               <>
-                <Button>View Website</Button>
+                <Button onPress={handleWebsiteClick}>View Website</Button>
                 <Text
                   style={{
                     textAlign: "center",
@@ -268,12 +351,16 @@ const Detail = () => {
                     value={message || "Hi, is this Product still in stock?"}
                     placeholderTextColor={"gray"}
                   />
-                  <TouchableOpacity
-                    style={styles.sendButton}
-                    onPress={() => setShowWebsite(true)}
-                  >
-                    <Ionicons name="send" size={24} color={colors.primary} />
-                  </TouchableOpacity>
+                  {creatingLead ? (
+                    <ActivityIndicator />
+                  ) : (
+                    <TouchableOpacity
+                      style={styles.sendButton}
+                      onPress={() => handleSubmit()}
+                    >
+                      <Ionicons name="send" size={24} color={colors.primary} />
+                    </TouchableOpacity>
+                  )}
                 </View>
                 {!message && (
                   <View

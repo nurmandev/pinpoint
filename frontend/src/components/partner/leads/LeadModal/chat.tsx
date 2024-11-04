@@ -114,7 +114,7 @@ const Chat: React.FC<Props> = ({ status }) => {
         {messages.length <= 0 ? (
           <View style={{ alignItems: "center", flex: 1 }}>
             <Text style={styles.messagePrompt}>
-              Send a message to Cody Dixon
+              Send a message to {user?.username}
             </Text>
           </View>
         ) : (

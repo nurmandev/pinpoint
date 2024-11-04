@@ -174,7 +174,7 @@ const Menu = () => {
               </View>
             }
           >
-            {(close) => <DeleteAccount />}
+            {(close) => <DeleteAccount close={close} />}
           </Modal>
         </View>
       </ScrollView>

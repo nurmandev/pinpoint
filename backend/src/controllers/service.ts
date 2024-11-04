@@ -1,9 +1,11 @@
 import { Request, Response } from "express";
 import { validationResult } from "express-validator";
-import Service, { IReview } from "../models/service";
+import Service from "../models/service";
 import { CustomRequest } from "../middleware/auth";
 import { deleteMediaFromS3, uploadMediaToS3 } from "../utils/media";
 import { ObjectId } from "mongoose";
+import { parseJSONField } from "../utils/common";
+import { IReview } from "../models/item";
 
 // Create Service Controller
 export const createService = async (req: CustomRequest, res: Response) => {
@@ -18,23 +20,6 @@ export const createService = async (req: CustomRequest, res: Response) => {
     });
     return;
   }
-  const parseJSONField = (field: any, fieldName: string) => {
-    if (typeof field === "string") {
-      try {
-        const parsedField = JSON.parse(field);
-        if (typeof parsedField === "object" || Array.isArray(parsedField)) {
-          return parsedField;
-        } else {
-          throw new Error();
-        }
-      } catch (error) {
-        throw new Error(
-          `Invalid format for ${fieldName}. Expected a valid JSON object or array.`
-        );
-      }
-    }
-    return field;
-  };
 
   try {
     const {
@@ -62,7 +47,7 @@ export const createService = async (req: CustomRequest, res: Response) => {
       for (const file of req.files) {
         const mediaType = file.mimetype.startsWith("image") ? "image" : "video";
         imageUploadPromises.push(
-          uploadMediaToS3(file.path, file.filename, mediaType)
+          uploadMediaToS3(file.buffer, file.filename, mediaType)
         );
       }
     }
@@ -176,7 +161,7 @@ export const updateService = async (req: CustomRequest, res: Response) => {
       for (const file of req.files) {
         const mediaType = file.mimetype.startsWith("image") ? "image" : "video";
         imageUploadPromises.push(
-          uploadMediaToS3(file.path, file.filename, mediaType)
+          uploadMediaToS3(file.buffer, file.filename, mediaType)
         );
       }
     }

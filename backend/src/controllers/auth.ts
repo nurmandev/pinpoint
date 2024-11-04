@@ -131,7 +131,7 @@ export const verifyEmail = async (req: Request, res: Response) => {
 
 // Login a user
 export const login = async (req: Request, res: Response) => {
-  const { email, password } = req.body;
+  const { email, password, role } = req.body;
 
   try {
     const user = await User.findOne({ email });
@@ -145,6 +145,11 @@ export const login = async (req: Request, res: Response) => {
     if (!isMatch) {
       res.status(400).json({ message: "Invalid credentials" });
 
+      return;
+    }
+    console.log(role, user.role);
+    if (role !== user.role) {
+      res.status(400).json({ message: `Pls login at the ${user.role} side` });
       return;
     }
 

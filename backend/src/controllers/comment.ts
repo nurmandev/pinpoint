@@ -1,7 +1,7 @@
 import { Response } from "express";
 import { CustomRequest } from "../middleware/auth";
 import Comment from "../models/comment";
-import Post from "../models/post";
+import Post from "../models/content";
 import { ObjectId } from "mongoose";
 
 // Create a new comment for a post

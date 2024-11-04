@@ -58,8 +58,9 @@ const data = [
 const Location = () => {
   return (
     <View style={{ flex: 1 }}>
+      <Text>No favorite location</Text>
       <FlatList
-        data={data}
+        data={[]}
         keyExtractor={(item, index) => index.toString()}
         renderItem={({ item }) => <RenderItem item={item} />}
         style={{ paddingVertical: 16 }}

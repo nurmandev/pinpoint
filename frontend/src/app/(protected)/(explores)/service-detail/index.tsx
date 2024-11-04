@@ -133,13 +133,11 @@ const Detail = () => {
                   {service?.location.map((loc) => loc.locationName).join(", ")}
                 </Text>
               </View>
-              <View style={{}}>
-                <View style={{ flexDirection: "row", gap: 5 }}>
-                  <Ionicons name="location-outline" />
-                  <Text style={{ marginBottom: 5 }}>
-                    {service?.location.map((loc) => loc.address).join(", ")}
-                  </Text>
-                </View>
+              <View style={{ flexDirection: "row", gap: 5, flex: 1 }}>
+                <Ionicons name="location-outline" />
+                <Text style={{ marginBottom: 5 }}>
+                  {service?.location.map((loc) => loc.address).join(", ")}
+                </Text>
               </View>
             </View>
             <View style={styles.section}>
@@ -337,6 +335,7 @@ const styles = StyleSheet.create({
     paddingBottom: 15,
     borderBlockColor: "#e1e1e1",
     borderBottomWidth: 1,
+    gap: 15,
   },
   tabcont: {
     flexDirection: "row",

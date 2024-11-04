@@ -73,11 +73,11 @@ const ActiveLeadsCard: React.FC = () => {
                 >
                   <List.Item
                     title={lead.customerName}
-                    description={`${lead.service.name} `}
+                    description={`${lead.item.name} `}
                     left={() => (
                       <Avatar.Image
                         size={40}
-                        source={{ uri: imageURL + lead.service.images[0] }}
+                        source={{ uri: imageURL + lead.item.images[0] }}
                       />
                     )}
                     right={() => (
@@ -101,11 +101,11 @@ const ActiveLeadsCard: React.FC = () => {
                 <View key={lead._id} style={styles.listItem}>
                   <List.Item
                     title={lead.customerName}
-                    description={`${lead.service.name} `}
+                    description={`${lead.item.name} `}
                     left={() => (
                       <Avatar.Image
                         size={40}
-                        source={{ uri: imageURL + lead.service.images[0] }}
+                        source={{ uri: imageURL + lead.item.images[0] }}
                       />
                     )}
                     right={() => (

@@ -32,7 +32,7 @@ const Completed: React.FC<Props> = ({ leads }) => {
             key={item._id}
           >
             <Image
-              source={{ uri: imageURL + item.service.images[0] }}
+              source={{ uri: imageURL + item.item.images[0] }}
               style={styles.image}
             />
             <View style={styles.rightSection}>
@@ -42,16 +42,16 @@ const Completed: React.FC<Props> = ({ leads }) => {
                   justifyContent: "space-between",
                 }}
               >
-                <Text style={styles.name}>{item.service.name}</Text>
+                <Text style={styles.name}>{item.item.name}</Text>
                 {item.reason === "Awaiting Customer Review" ? (
                   <Pressable
                     onPress={() =>
                       router.push({
                         pathname: "/inquiry/review",
                         params: {
-                          id: item?.service._id,
-                          image: item?.service.images[0],
-                          serviceName: item?.service.name,
+                          id: item?.item._id,
+                          image: item?.item.images[0],
+                          serviceName: item?.item.name,
                         },
                       })
                     }
@@ -83,7 +83,7 @@ const Completed: React.FC<Props> = ({ leads }) => {
 
               <Text style={{}}>{item.location.locationName}</Text>
               <Text style={{}} numberOfLines={2}>
-                {item.service.description}
+                {item.item.description}
               </Text>
               <View
                 style={{
@@ -94,7 +94,9 @@ const Completed: React.FC<Props> = ({ leads }) => {
                 <Text style={{}}>
                   {moment(item.serviceRequestDate).calendar()}{" "}
                 </Text>
-                <Rating rating={item.service.rating} show={false} />
+                {item.reason === "Completed" && (
+                  <Rating rating={item.rating} show={false} />
+                )}
               </View>
             </View>
           </TouchableOpacity>

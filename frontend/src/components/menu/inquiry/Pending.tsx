@@ -59,14 +59,14 @@ const Pending: React.FC<Props> = ({ leads }) => {
             key={item._id}
           >
             <Image
-              source={{ uri: imageURL + item.service.images[0] }}
+              source={{ uri: imageURL + item.item.images[0] }}
               style={styles.image}
             />
             <View style={styles.rightSection}>
-              <Text style={styles.name}>{item.service.name}</Text>
+              <Text style={styles.name}>{item.item.name}</Text>
               <Text style={{}}>{item.location.locationName}</Text>
               <Text style={{}} numberOfLines={3}>
-                {item.service.description}
+                {item.item.description}
               </Text>
               <Text style={{ fontWeight: "500" }}>
                 {moment(item.serviceRequestDate).calendar()}

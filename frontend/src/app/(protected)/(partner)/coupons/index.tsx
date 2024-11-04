@@ -16,55 +16,15 @@ import { Ionicons } from "@expo/vector-icons";
 import Modal from "@/src/components/modals/modal";
 import Create from "@/src/components/partner/coupon/Create";
 
-const data = [
-  {
-    id: "1",
-    name: "Location Name",
-    couponId: "#OCD6RSB9",
-    exp: "01/12/2024",
-    percentage: "-10%",
-    image: require("../../../../../assets/images/product.png"),
-  },
-  {
-    id: "2",
-    name: "Location Name",
-    couponId: "#OCD6RSB9",
-    exp: "01/12/2024",
-    percentage: "-10%",
-    image: require("../../../../../assets/images/product.png"),
-  },
-  {
-    id: "3",
-    name: "Location Name",
-    couponId: "#OCD6RSB9",
-    exp: "01/12/2024",
-    percentage: "-10%",
-    image: require("../../../../../assets/images/product.png"),
-  },
-  {
-    id: "4",
-    name: "Location Name",
-    couponId: "#OCD6RSB9",
-    exp: "01/12/2024",
-    percentage: "-10%",
-    image: require("../../../../../assets/images/product.png"),
-  },
-  {
-    id: "5",
-    name: "Location Name",
-    couponId: "#OCD6RSB9",
-    exp: "01/12/2024",
-    percentage: "-10%",
-    image: require("../../../../../assets/images/product.png"),
-  },
-  {
-    id: "6",
-    name: "Location Name",
-    couponId: "#OCD6RSB9",
-    exp: "01/12/2024",
-    percentage: "-10%",
-    image: require("../../../../../assets/images/product.png"),
-  },
+const data: any = [
+  // {
+  //   id: "1",
+  //   name: "Location Name",
+  //   couponId: "#OCD6RSB9",
+  //   exp: "01/12/2024",
+  //   percentage: "-10%",
+  //   image: require("../../../../../assets/images/product.png"),
+  // },
 ];
 
 const Coupons = () => {
@@ -72,12 +32,12 @@ const Coupons = () => {
   const { width, isMobile } = useDimensions();
   return (
     <>
-      {Platform.OS !== "web" && (
+      {/* {Platform.OS !== "web" && (
         <Appbar.Header>
           <Appbar.BackAction onPress={() => router.back()} />
           <Appbar.Content title="Coupon" />
         </Appbar.Header>
-      )}
+      )} */}
       <View style={styles.container}>
         {Platform.OS === "web" && (
           <>
@@ -128,7 +88,7 @@ const Coupons = () => {
           <View
             style={{ flex: 1, flexWrap: "wrap", gap: 15, flexDirection: "row" }}
           >
-            {data.map((item) => (
+            {data.map((item: any) => (
               <TouchableOpacity
                 onPress={() => router.push("/coupons/uhh")}
                 style={[

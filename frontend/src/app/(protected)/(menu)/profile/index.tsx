@@ -10,14 +10,13 @@ import {
 import React, { useEffect, useState } from "react";
 import { Entypo, Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { BlurView } from "expo-blur";
 import Followers from "@/src/components/menu/Followers";
 import Favourites from "@/src/components/menu/Favourites";
 import Activity from "@/src/components/Activity";
 import { useUser } from "@/src/context/User";
 import { imageURL } from "@/src/services/api";
-import { fetchPostsByLocation } from "@/src/services/post";
 import { Post } from "@/src/types/post";
+import { fetchContentsByUser } from "@/src/services/content";
 
 const Profile = () => {
   const { user } = useUser();
@@ -25,20 +24,20 @@ const Profile = () => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const fetchPosts = async () => {
+    try {
+      if (!user?._id) return;
+      setLoading(true);
+      const postsData = await fetchContentsByUser(user?._id);
+      console.log(postsData);
+      setPosts(postsData);
+    } catch (error) {
+      console.error("Error fetching posts:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
   useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        if (!user?._id) return;
-        setLoading(true);
-        const postsData = await fetchPostsByLocation(user?._id);
-        setPosts(postsData);
-      } catch (error) {
-        console.error("Error fetching posts:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchPosts();
   }, [user?._id]);
 

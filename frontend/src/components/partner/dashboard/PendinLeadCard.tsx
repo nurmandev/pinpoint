@@ -12,38 +12,6 @@ import { imageURL } from "@/src/services/api";
 import { router } from "expo-router";
 import useDimensions from "@/src/hooks/useDimension";
 
-const leads = [
-  {
-    id: "1",
-    name: "Cody Dixon",
-    service: "Service Name",
-    time: "1 min ago",
-    location: "Location Name",
-  },
-  {
-    id: "2",
-    name: "Cody Dixon",
-    service: "Service Name",
-    time: "5 min ago",
-    location: "Location Name",
-  },
-  {
-    id: "3",
-    name: "Cody Dixon",
-    service: "Service Name",
-    time: "1 hour ago",
-    location: "Location Name",
-  },
-  {
-    id: "4",
-    name: "Cody Dixon",
-    service: "Service Name",
-    time: "2 hours ago",
-    location: "Location Name",
-  },
-  // Add more items if needed to test scrolling
-];
-
 const PendingLeadsCard: React.FC = () => {
   const { addNotification } = useToastNotification();
   const { fetchPartnerLeads } = useLead();
@@ -85,11 +53,11 @@ const PendingLeadsCard: React.FC = () => {
                 <List.Item
                   key={lead._id}
                   title={lead.customerName}
-                  description={`${lead.service.name}`}
+                  description={`${lead.item.name}`}
                   left={() => (
                     <Avatar.Image
                       size={40}
-                      source={{ uri: imageURL + lead.service.images[0] }}
+                      source={{ uri: imageURL + lead.item.images[0] }}
                     />
                   )}
                   right={() => (
@@ -106,11 +74,11 @@ const PendingLeadsCard: React.FC = () => {
                   button={
                     <List.Item
                       title={lead.customerName}
-                      description={`${lead.service.name}`}
+                      description={`${lead.item.name}`}
                       left={() => (
                         <Avatar.Image
                           size={40}
-                          source={{ uri: imageURL + lead.service.images[0] }}
+                          source={{ uri: imageURL + lead.item.images[0] }}
                         />
                       )}
                       right={() => (

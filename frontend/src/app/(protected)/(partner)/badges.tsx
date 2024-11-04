@@ -3,11 +3,11 @@ import React from "react";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import useDimensions from "@/src/hooks/useDimension";
 
-const data = [
-  { id: "1", earned: true },
-  { id: "2", earned: false },
-  { id: "3", earned: false },
-  { id: "4", earned: false },
+const data: any = [
+  // { id: "1", earned: true },
+  // { id: "2", earned: false },
+  // { id: "3", earned: false },
+  // { id: "4", earned: false },
 ];
 
 const Badges = () => {

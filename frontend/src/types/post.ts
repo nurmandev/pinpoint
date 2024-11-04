@@ -6,7 +6,7 @@ export enum MediaType {
   VIDEO = "video",
 }
 
-interface Media {
+export interface Media {
   url: string;
   type: MediaType;
 }

@@ -11,6 +11,7 @@ import {
   getPosts,
 } from "../services/post";
 import { Post } from "../types/post";
+import { likeContent } from "../services/content";
 
 interface PostContextProps {
   posts: Post[];
@@ -81,8 +82,7 @@ export const PostProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const likeExistingPost = async (id: string) => {
     try {
-      const response = await likePost(id);
-      // Update the posts state if needed
+      await likeContent(id);
       fetchPosts();
     } catch (error) {
       throw error;

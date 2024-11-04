@@ -25,7 +25,6 @@ export default function Layout() {
   if (!user) {
     return <Redirect href="/login" />;
   } else if (user.role !== UserRole.PARTNER) {
-    console.log(user);
     return <Redirect href="/" />;
   }
 

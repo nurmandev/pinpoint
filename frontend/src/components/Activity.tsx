@@ -1,5 +1,5 @@
-import { Image, StyleSheet, Text, View } from "react-native";
-import React, { useEffect, useState } from "react";
+import { StyleSheet, Text, View } from "react-native";
+import React from "react";
 import FeedItem from "./social/FeedItem";
 import { Post } from "../types/post";
 import { ActivityIndicator } from "react-native-paper";

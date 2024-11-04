@@ -19,15 +19,23 @@ import { useToastNotification } from "@/src/context/ToastNotificationContext";
 interface Props {
   buttonStyle?: StyleProp<ViewStyle>;
   icon?: ReactNode;
+  onClose?: () => void;
+  onOpen?: () => void;
 }
 
-const Share: React.FC<Props> = ({ buttonStyle, icon }) => {
+const Share: React.FC<Props> = ({ buttonStyle, icon, onClose, onOpen }) => {
   const [visible, setVisible] = useState(false);
   const { addNotification } = useToastNotification();
 
-  const openMenu = () => setVisible(true);
+  const openMenu = () => {
+    setVisible(true);
+    onOpen && onOpen();
+  };
 
-  const closeMenu = () => setVisible(false);
+  const closeMenu = () => {
+    setVisible(false);
+    onClose && onClose();
+  };
 
   const copyToClipboard = async () => {
     console.log("coping");

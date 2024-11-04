@@ -1,62 +1,22 @@
-import { Schema, Document, model } from "mongoose";
+import { Schema } from "mongoose";
+import Content, { IContent, Media } from "./content";
 
-interface IStory extends Document {
-  user: Schema.Types.ObjectId;
-  location?: Schema.Types.ObjectId;
-  media: string;
-  mediaType: "image" | "video";
-  caption?: string;
+// Story Model
+interface IStory extends IContent {
+  caption: string;
   views: Schema.Types.ObjectId[];
-  likes: Schema.Types.ObjectId[];
-  isArchived: boolean;
-  isDeleted: boolean;
-  createdAt: Date;
+  media: Media;
 }
 
-// Define the schema
 const storySchema = new Schema<IStory>({
-  user: {
-    type: Schema.Types.ObjectId,
-    ref: "User",
-    required: true,
-  },
-  location: { type: Schema.Types.ObjectId, ref: "Location" },
-  likes: [{ type: Schema.Types.ObjectId, ref: "User" }],
+  caption: { type: String, maxlength: 300 },
+  views: [{ type: Schema.Types.ObjectId, ref: "User" }],
   media: {
-    type: String,
-    required: true,
-  },
-  mediaType: {
-    type: String,
-    enum: ["image", "video"],
-    required: true,
-  },
-  caption: {
-    type: String,
-    maxlength: 300,
-  },
-  views: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-    },
-  ],
-  isArchived: {
-    type: Boolean,
-    default: false,
-  },
-  isDeleted: {
-    type: Boolean,
-    default: false,
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-    expires: "24h",
+    url: { type: String, required: true },
+    type: { type: String, enum: ["image", "video"], required: true },
   },
 });
 
-// Create the model
-const Story = model<IStory>("Story", storySchema);
+const Story = Content.discriminator<IStory>("Story", storySchema);
 
 export default Story;

@@ -28,7 +28,7 @@ import { fetchProductsForLocation } from "@/src/services/product";
 import { IProduct } from "@/src/types/product";
 import { IService } from "@/src/types/service";
 import { Post } from "@/src/types/post";
-import { fetchPostsByLocation } from "@/src/services/post";
+import { fetchContentsByLocation } from "@/src/services/content";
 
 const Location = () => {
   const { id } = useLocalSearchParams();
@@ -54,7 +54,7 @@ const Location = () => {
       try {
         if (!id) return;
         setLoadingPost(true);
-        const postsData = await fetchPostsByLocation(id as string);
+        const postsData = await fetchContentsByLocation(id as string);
         setPosts(postsData);
       } catch (error) {
         console.error("Error fetching posts:", error);

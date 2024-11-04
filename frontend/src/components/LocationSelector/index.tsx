@@ -11,9 +11,13 @@ import PlaceRow, { PlaceRowProps } from "./PlaceRow";
 const LocationSelector = ({
   onLocationSelect,
   close,
+  focus,
+  placeholder,
 }: {
   onLocationSelect: (location: any) => void;
   close: () => void;
+  focus?: boolean;
+  placeholder?: string;
 }) => {
   const { colors } = useTheme();
   const [isFocus, setIsFocus] = useState(false);
@@ -38,15 +42,17 @@ const LocationSelector = ({
   // }, []);
 
   useEffect(() => {
-    textInput1?.current?.focus();
-  }, []);
+    if (focus) {
+      textInput1?.current?.focus();
+    }
+  }, [focus]);
 
   return (
     <View style={styles.container}>
       {/* {currentCoords ? ( */}
       <GooglePlacesAutocomplete
         nearbyPlacesAPI="GooglePlacesSearch"
-        placeholder="Search Location"
+        placeholder={placeholder || "Search Location"}
         listViewDisplayed="auto"
         debounce={400}
         minLength={2}
@@ -76,10 +82,27 @@ const LocationSelector = ({
           language: "en",
           // components: "country:ng",
         }}
-        onPress={(data, details = null) => {
+        onPress={(data, details) => {
           onLocationSelect({
             description: data.description,
             coordinates: details?.geometry.location, // { lat, lng }
+          });
+          const addressComponents = details!.address_components;
+
+          // Find city and state
+          const city = addressComponents.find((component) =>
+            component.types.includes("locality")
+          )?.long_name;
+
+          const state = addressComponents.find((component) =>
+            component.types.includes("administrative_area_level_1")
+          )?.long_name;
+
+          onLocationSelect({
+            description: data.description,
+            coordinates: details?.geometry.location,
+            city,
+            state,
           });
           close();
         }}
@@ -98,7 +121,7 @@ const LocationSelector = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
+    marginBottom: 16,
   },
   textInputContainer: {
     backgroundColor: "white",

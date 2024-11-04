@@ -10,6 +10,7 @@ import product from "./product";
 import service from "./service";
 import message from "./message";
 import lead from "./lead";
+import content from "./content";
 
 const router = express.Router();
 
@@ -24,5 +25,6 @@ router.use("/products", product);
 router.use("/services", service);
 router.use("/leads", lead);
 router.use("/messages", message);
+router.use("/contents", content);
 
 export default router;

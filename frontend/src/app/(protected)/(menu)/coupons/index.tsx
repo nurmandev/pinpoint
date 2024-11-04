@@ -12,55 +12,15 @@ import { Appbar, useTheme } from "react-native-paper";
 import { router } from "expo-router";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 
-const data = [
-  {
-    id: "1",
-    name: "Location Name",
-    couponId: "#OCD6RSB9",
-    exp: "01/12/2024",
-    percentage: "-10%",
-    image: require("../../../../../assets/images/product.png"),
-  },
-  {
-    id: "2",
-    name: "Location Name",
-    couponId: "#OCD6RSB9",
-    exp: "01/12/2024",
-    percentage: "-10%",
-    image: require("../../../../../assets/images/product.png"),
-  },
-  {
-    id: "3",
-    name: "Location Name",
-    couponId: "#OCD6RSB9",
-    exp: "01/12/2024",
-    percentage: "-10%",
-    image: require("../../../../../assets/images/product.png"),
-  },
-  {
-    id: "4",
-    name: "Location Name",
-    couponId: "#OCD6RSB9",
-    exp: "01/12/2024",
-    percentage: "-10%",
-    image: require("../../../../../assets/images/product.png"),
-  },
-  {
-    id: "5",
-    name: "Location Name",
-    couponId: "#OCD6RSB9",
-    exp: "01/12/2024",
-    percentage: "-10%",
-    image: require("../../../../../assets/images/product.png"),
-  },
-  {
-    id: "6",
-    name: "Location Name",
-    couponId: "#OCD6RSB9",
-    exp: "01/12/2024",
-    percentage: "-10%",
-    image: require("../../../../../assets/images/product.png"),
-  },
+const data: any = [
+  // {
+  //   id: "1",
+  //   name: "Location Name",
+  //   couponId: "#OCD6RSB9",
+  //   exp: "01/12/2024",
+  //   percentage: "-10%",
+  //   image: require("../../../../../assets/images/product.png"),
+  // },
 ];
 
 const WIDTH = Dimensions.get("screen").width;

@@ -11,11 +11,11 @@ import { Appbar, useTheme } from "react-native-paper";
 import { router } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
-const data = [
-  { id: "1", earned: true },
-  { id: "2", earned: false },
-  { id: "3", earned: false },
-  { id: "4", earned: false },
+const data: any = [
+  // { id: "1", earned: true },
+  // { id: "2", earned: false },
+  // { id: "3", earned: false },
+  // { id: "4", earned: false },
 ];
 
 const WIDTH = Dimensions.get("screen").width;

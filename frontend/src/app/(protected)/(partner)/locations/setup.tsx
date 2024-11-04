@@ -338,17 +338,20 @@ const Location = () => {
                 </View>
               }
               content={(close) => (
-                <LocationSelector
-                  onLocationSelect={(location) => {
-                    console.log(location);
-                    handleChange("address", location.description);
-                    handleChange("coordinates", {
-                      latitude: location.coordinates.lat,
-                      longitude: location.coordinates.lng,
-                    });
-                  }}
-                  close={close}
-                />
+                <View style={{ padding: 16, flex: 1 }}>
+                  <LocationSelector
+                    onLocationSelect={(location) => {
+                      console.log(location);
+                      handleChange("address", location.description);
+                      handleChange("coordinates", {
+                        latitude: location.coordinates.lat,
+                        longitude: location.coordinates.lng,
+                      });
+                    }}
+                    close={close}
+                    focus
+                  />
+                </View>
               )}
             />
             {formData.errors.address && (

@@ -21,9 +21,11 @@ import * as ImagePicker from "expo-image-picker";
 import { createLead } from "@/src/services/lead";
 import { useToastNotification } from "@/src/context/ToastNotificationContext";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import { useUser } from "@/src/context/User";
 
 const Inquire = () => {
   const { colors } = useTheme();
+  const { user } = useUser();
   const [contactMethod, setContactMethod] = useState<"text" | "email" | "call">(
     "call"
   );
@@ -35,8 +37,8 @@ const Inquire = () => {
   const [error, setError] = useState("");
 
   // Form state
-  const [customerName, setCustomerName] = useState("");
-  const [email, setEmail] = useState("");
+  const [customerName, setCustomerName] = useState(user?.username);
+  const [email, setEmail] = useState(user?.email);
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
   const [serviceRequestDate, setServiceRequestDate] = useState("");
@@ -159,7 +161,7 @@ const Inquire = () => {
         serviceRequestDate: new Date(serviceRequestDate),
         details,
         location: service?.location[0]._id || "",
-        service: service?._id || "",
+        item: service?._id || "",
         uploadedMedia: media,
       };
 

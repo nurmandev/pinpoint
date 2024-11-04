@@ -1,12 +1,19 @@
 import { Redirect, Tabs } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Platform } from "react-native";
+import { useUser } from "@/src/context/User";
+
 export default function TabLayout() {
+  const { user } = useUser();
   // This layout can be deferred because it's not the root layout.
 
   if (Platform.OS === "web") {
     return <Redirect href="/dashboard" />;
   }
+  if (user && user.role === "partner") {
+    return <Redirect href="/dashboard" />;
+  }
+
   return (
     <Tabs screenOptions={{ headerShown: false }}>
       <Tabs.Screen

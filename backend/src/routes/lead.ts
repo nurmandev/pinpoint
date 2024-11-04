@@ -3,8 +3,10 @@ import {
   addNoteToLead,
   createLead,
   getLeadById,
+  getLeadByItem,
   getPartnerLeads,
   getUserLeads,
+  submitReview,
   updateLeadStatus,
 } from "../controllers/lead";
 import { leadValidation } from "../utils/validations";
@@ -15,15 +17,7 @@ import path from "path";
 
 const router = Router();
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "uploads/");
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
-  },
-});
+const storage = multer.memoryStorage();
 
 // Multer config
 const upload = multer({
@@ -34,6 +28,7 @@ const upload = multer({
 router.get("/", auth(), getUserLeads);
 router.get("/partner", auth(), getPartnerLeads);
 router.get("/:id", auth(), getLeadById);
+router.get("/item/:id", auth(), getLeadByItem);
 
 router.post(
   "/",
@@ -42,6 +37,7 @@ router.post(
   upload.array("media"),
   createLead
 );
+router.post("/:id/review", auth(), upload.array("media"), submitReview);
 router.put("/:leadId/status", auth(), updateLeadStatus);
 router.put(
   "/:leadId/note",

@@ -2,6 +2,7 @@ import { Schema, model, Document } from "mongoose";
 
 export interface IReview {
   userId: Schema.Types.ObjectId;
+  title: string;
   content: string;
   rating: number;
   image?: string;
@@ -10,6 +11,7 @@ export interface IReview {
 const ReviewSchema: Schema<IReview> = new Schema(
   {
     userId: { type: Schema.Types.ObjectId, ref: "User" },
+    title: { type: String, required: true },
     content: { type: String, required: true },
     rating: { type: Number, required: true },
     image: { type: String },
@@ -40,7 +42,7 @@ export interface LocationDocument extends Document {
     type: string;
     coordinates: [number, number]; // [longitude, latitude]
   };
-  rating: 0;
+  rating: number;
   reviews: IReview[];
   followers: Schema.Types.ObjectId[];
   likes: Schema.Types.ObjectId[];

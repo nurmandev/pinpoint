@@ -93,7 +93,7 @@ const LeadsMobile: React.FC = () => {
                   <View style={{ padding: 10, gap: 15 }}>
                     <Text>
                       <Text style={styles.title}>Service Name: </Text>
-                      {lead.service.name}
+                      {lead.item.name}
                     </Text>
                     <Text>
                       <Text style={styles.title}>Location Name: </Text>
@@ -120,9 +120,9 @@ const LeadsMobile: React.FC = () => {
                     >
                       <Text style={{ flex: 1 }}>
                         <Text style={styles.title}>Price: </Text>
-                        {lead.service?.priceType === "flat"
-                          ? `$${lead.service?.price}`
-                          : `$${lead.service?.priceRange?.from} - $${lead.service?.priceRange?.to}`}
+                        {lead.item?.priceType === "range"
+                          ? `$${lead.item?.priceRange?.from} - $${lead.item?.priceRange?.to}`
+                          : `$${lead.item?.price}`}
                       </Text>
 
                       {lead.status === "Pending" && (
@@ -132,7 +132,12 @@ const LeadsMobile: React.FC = () => {
                         </Text>
                       )}
                       {lead.status === "Complete" && (
-                        <Text style={{ color: "red", flex: 1 }}>
+                        <Text
+                          style={{
+                            color: lead.reason === "Complete" ? "green" : "red",
+                            flex: 1,
+                          }}
+                        >
                           {lead.reason}
                         </Text>
                       )}

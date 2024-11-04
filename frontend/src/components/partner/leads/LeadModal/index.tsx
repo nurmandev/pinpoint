@@ -134,12 +134,14 @@ const LeadsModal: React.FC<ModalProps> = () => {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.serviceTitle}>
-          {lead?.service.name}{" "}
+          {lead?.item.name}{" "}
           <Text style={styles.price}>
             {" "}
-            {lead?.service?.priceType === "flat"
-              ? `$${lead.service?.price}`
-              : `$${lead?.service?.priceRange?.from} - $${lead?.service?.priceRange?.to}`}
+            {lead?.modifyPrice
+              ? `$${lead.modifyPrice}`
+              : lead?.item?.priceType === "range"
+              ? `$${lead?.item?.priceRange?.from} - $${lead?.item?.priceRange?.to}`
+              : `$${lead?.item?.price}`}
           </Text>{" "}
           -{" "}
           <Text
@@ -155,7 +157,7 @@ const LeadsModal: React.FC<ModalProps> = () => {
               },
             ]}
           >
-            {lead?.status}
+            {lead?.status} <Text>{lead?.modifyPrice ? " - Modify" : null}</Text>
           </Text>
         </Text>
       </View>
@@ -188,23 +190,32 @@ const LeadsModal: React.FC<ModalProps> = () => {
           <Ionicons name="calendar-outline" color="gray" />
           <View>
             <Text style={{ color: "gray" }}>Date & Time</Text>
-            <Text> {moment(lead?.serviceRequestDate).calendar()}</Text>
+            <Text>
+              {" "}
+              {moment(
+                lead?.modifyDate ? lead.modifyDate : lead?.serviceRequestDate
+              ).calendar()}
+            </Text>
           </View>
         </View>
-        <View style={styles.detail}>
-          <Ionicons name="call-outline" color="gray" />
-          <View>
-            <Text style={{ color: "gray" }}>Phone</Text>
-            <Text> {lead?.phone}</Text>
+        {lead?.phone && (
+          <View style={styles.detail}>
+            <Ionicons name="call-outline" color="gray" />
+            <View>
+              <Text style={{ color: "gray" }}>Phone</Text>
+              <Text> {lead?.phone}</Text>
+            </View>
           </View>
-        </View>
-        <View style={styles.detail}>
-          <Ionicons name="location-outline" color="gray" />
-          <View>
-            <Text style={{ color: "gray" }}>Address</Text>
-            <Text> {lead?.address}</Text>
+        )}
+        {lead?.address && (
+          <View style={styles.detail}>
+            <Ionicons name="location-outline" color="gray" />
+            <View>
+              <Text style={{ color: "gray" }}>Address</Text>
+              <Text> {lead?.address}</Text>
+            </View>
           </View>
-        </View>
+        )}
       </View>
 
       {/* Other De3tails */}
@@ -212,8 +223,12 @@ const LeadsModal: React.FC<ModalProps> = () => {
         <Text style={styles.sectionTitle}>Other Details</Text>
         <Text style={styles.textGray}>Urgency</Text>
         <Text style={{ marginBottom: 15 }}> Important</Text>
-        <Text style={styles.textGray}>Preferred Method of Contact</Text>
-        <Text style={{ marginBottom: 15 }}> {lead?.contactMethod}</Text>
+        {lead?.contactMethod && (
+          <>
+            <Text style={styles.textGray}>Preferred Method of Contact</Text>
+            <Text style={{ marginBottom: 15 }}> {lead?.contactMethod}</Text>
+          </>
+        )}
         <Text style={styles.textGray}>Additional Details</Text>
         <Text style={{ marginBottom: 15 }}>{lead?.details}</Text>
         {lead?.uploadedMedia && lead.uploadedMedia.length > 0 && (
@@ -285,35 +300,63 @@ const LeadsModal: React.FC<ModalProps> = () => {
       </View>
 
       {/* Action Buttons */}
-      {lead?.status === "Pending" && (
-        <View style={styles.actionButtons}>
-          <Modal
-            button={
-              <Button
-                variant="outlined"
-                containerStyle={[styles.declineButton]}
-                loading={declining}
-                disabled
-              >
-                Decline
-              </Button>
-            }
-            buttonStyle={{ flex: 1 }}
-          >
-            {(close) => (
-              <Decline close={close} id={lead!._id} setLead={setLead} />
-            )}
-          </Modal>
-          <Button
-            onPress={approveLead}
-            variant="contained"
-            containerStyle={styles.approveButton}
-            loading={approving}
-          >
-            Approve
-          </Button>
-        </View>
-      )}
+      {lead?.status === "Pending" &&
+        ((lead.item as any).type === "Service" ? (
+          <View style={styles.actionButtons}>
+            <Modal
+              button={
+                <Button
+                  variant="outlined"
+                  containerStyle={[styles.declineButton]}
+                  loading={declining}
+                  disabled
+                >
+                  Decline
+                </Button>
+              }
+              buttonStyle={{ flex: 1 }}
+            >
+              {(close) => (
+                <Decline close={close} id={lead!._id} setLead={setLead} />
+              )}
+            </Modal>
+            <Button
+              onPress={approveLead}
+              variant="contained"
+              containerStyle={styles.approveButton}
+              loading={approving}
+            >
+              Approve
+            </Button>
+          </View>
+        ) : (
+          <View style={styles.actionButtons}>
+            <Modal
+              button={
+                <Button
+                  variant="outlined"
+                  containerStyle={[styles.declineButton]}
+                  loading={declining}
+                  disabled
+                >
+                  Pending Sale
+                </Button>
+              }
+              buttonStyle={{ flex: 1 }}
+            >
+              {(close) => <></>}
+            </Modal>
+            <Button
+              // onPress={approveLead}
+              variant="contained"
+              containerStyle={styles.approveButton}
+              loading={approving}
+            >
+              Complete
+            </Button>
+          </View>
+        ))}
+
       {lead?.status === "Active" && (
         <View style={styles.actionButtons}>
           <Modal

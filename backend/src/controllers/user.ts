@@ -41,7 +41,7 @@ export const updateUserData = async (req: CustomRequest, res: Response) => {
       for (const file of req.files) {
         const mediaType = file.mimetype.startsWith("image") ? "image" : "video";
         imageUploadPromises.push(
-          uploadMediaToS3(file.path, file.filename, mediaType)
+          uploadMediaToS3(file.buffer, file.filename, mediaType)
         );
       }
     }

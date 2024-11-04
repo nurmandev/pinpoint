@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { getMedia } from "../controllers/media";
+import { downloadMedia } from "../controllers/media";
 
 const router = Router();
 
-router.get("/:key", getMedia);
+router.get("/:key", downloadMedia);
 
 export default router;

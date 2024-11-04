@@ -12,7 +12,7 @@ export interface Lead {
   serviceRequestDate: Date;
   details: string;
   location: Location;
-  service: IService;
+  item: IService;
   partner: User;
   user: User;
   uploadedMedia?: string[];
@@ -21,6 +21,9 @@ export interface Lead {
   createdAt: string;
   conversationId?: string;
   reason?: string;
-  offer?: string;
+  modifyDate?: Date;
+  modifyTime?: string;
+  modifyPrice?: string;
   dateCompleted?: string;
+  rating: number;
 }

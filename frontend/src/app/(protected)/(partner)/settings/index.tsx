@@ -3,9 +3,12 @@ import React, { useState } from "react";
 import { useTheme } from "react-native-paper";
 import { Feather, Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { useUser } from "@/src/context/User";
 
 const Settings = () => {
   const { colors } = useTheme();
+  const { logout } = useUser();
+
   const [currentTab, setCurrentTab] = useState("Edit Profile");
   return (
     <View style={styles.container}>
@@ -24,7 +27,7 @@ const Settings = () => {
           <Text style={styles.logoutText}>Edit Notification</Text>
           <Feather name="bell" size={24} color="#555" />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.logoutButton}>
+        <TouchableOpacity style={styles.logoutButton} onPress={logout}>
           <Text style={styles.logoutText}>Log Out</Text>
           <Ionicons name="log-out-outline" size={24} color="#555" />
         </TouchableOpacity>

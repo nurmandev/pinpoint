@@ -2,11 +2,16 @@ import { RegistrationData } from "../types/auth";
 import axiosInstance from "./api";
 
 // Login
-export const loginSerrvice = async (email: string, password: string) => {
+export const loginSerrvice = async (
+  email: string,
+  password: string,
+  role: string
+) => {
   try {
     const response = await axiosInstance.post("/auths/login", {
       email,
       password,
+      role,
     });
     return response.data; // This will contain the token and other info
   } catch (error: any) {

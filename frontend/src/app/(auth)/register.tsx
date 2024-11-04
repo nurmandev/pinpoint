@@ -19,6 +19,8 @@ import { useAuth } from "@/src/context/Auth";
 import { RegistrationData } from "@/src/types/auth";
 import RegistrationSuccessModal from "@/src/components/auth/RegisterModal";
 import { states } from "@/src/utils/country";
+import LocationSelector from "@/src/components/LocationSelector";
+import BottomSheetComponent from "@/src/components/BottomSheetComponent";
 
 const businessType = [
   { label: "I sell Products", value: "products" },
@@ -72,6 +74,7 @@ const Register = () => {
 
   const handleInputChange = (name: string, value: string | boolean) => {
     setFormData({ ...formData, [name]: value });
+    setErrors({ ...errors, [name]: "" });
   };
 
   const validateForm = () => {
@@ -275,49 +278,69 @@ const Register = () => {
                 error={errors.lastName}
               />
             </View>
-            <TextInput
-              placeholder="Business Physical Address"
-              onChangeText={(text) =>
-                handleInputChange("businessAddress", text)
+
+            <BottomSheetComponent
+              button={
+                <View
+                  style={[
+                    {
+                      borderWidth: 1,
+                      borderRadius: 5,
+                      padding: 15,
+                      backgroundColor: "#f1f1f1",
+                      marginBottom: 20,
+                      justifyContent: "center",
+                      borderColor: "#e1e1e1",
+                    },
+                  ]}
+                >
+                  <Text style={{ fontSize: 18 }} numberOfLines={1}>
+                    {formData.businessAddress || "Business Physical Address"}
+                  </Text>
+                </View>
               }
-              value={formData.businessAddress}
-              error={errors.businessAddress}
+              content={(close) => (
+                <View style={{ padding: 16, flex: 1 }}>
+                  <LocationSelector
+                    onLocationSelect={(location) => {
+                      console.log(location);
+                      setFormData({
+                        ...formData,
+                        businessAddress: location.description,
+                        state: location.state,
+                        city: location.city,
+                      });
+                    }}
+                    focus
+                    close={close}
+                  />
+                </View>
+              )}
             />
+            <View style={[styles.selectContainer, { marginBottom: 0 }]}>
+              <TextInput
+                placeholder="State"
+                // onChangeText={(text) => handleInputChange("suite", text)}
+                value={formData.state}
+                containerStyle={{ flex: 1 }}
+                error={errors.state}
+                editable={false}
+              />
+              <TextInput
+                placeholder="City"
+                // onChangeText={(text) => handleInputChange("suite", text)}
+                containerStyle={{ flex: 1 }}
+                value={formData.city}
+                editable={false}
+                error={errors.city}
+              />
+            </View>
             <TextInput
               placeholder="Suite/Bldg"
               onChangeText={(text) => handleInputChange("suite", text)}
               value={formData.suite}
               error={errors.suite}
             />
-            <View style={styles.selectContainer}>
-              <Select
-                containerStyle={{ flex: 1 }}
-                placeholder="State"
-                options={states.map((state) => ({
-                  label: `${state.name}(${state.abbreviation})`,
-                  value: state.name,
-                }))}
-                selectedValue={formData.state}
-                onValueChange={(value) =>
-                  handleInputChange("state", value as string)
-                }
-                error={errors.state}
-              />
-              <Select
-                containerStyle={{ flex: 1 }}
-                placeholder="City"
-                options={
-                  cities
-                    ? cities.map((city) => ({ label: city, value: city }))
-                    : []
-                }
-                selectedValue={formData.city}
-                onValueChange={(value) =>
-                  handleInputChange("city", value as string)
-                }
-                error={errors.city}
-              />
-            </View>
             <TextInput
               placeholder="Zip Code"
               onChangeText={(text) => handleInputChange("zipCode", text)}
@@ -524,5 +547,8 @@ const styles = StyleSheet.create({
     color: "red",
     marginTop: -20,
     fontSize: 14,
+  },
+  input: {
+    fontSize: 20,
   },
 });

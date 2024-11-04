@@ -4,6 +4,7 @@ import React, {
   useContext,
   ReactNode,
   useEffect,
+  useRef,
 } from "react";
 import {
   getAllStoriesGroupedByUser,
@@ -14,12 +15,13 @@ import {
 import { IStory } from "../types/story";
 import { useUser } from "./User";
 import { Location } from "../types/location";
+import { Media } from "../types/post";
+import { Animated, Easing } from "react-native";
 
 export interface SortedStory {
   _id: string;
   location?: Location;
-  media: string;
-  mediaType: "image" | "video";
+  media?: Media;
   caption?: string;
   views: string[];
   likes: string[];
@@ -33,6 +35,12 @@ interface StoryContextType {
   loading: boolean;
   uploading: boolean;
   error: string | null;
+  isViewerVisible: boolean;
+  scaleAnim: any;
+  opacityAnim: any;
+  startIndex: number;
+  openViewer: (index: number) => void;
+  closeViewer: () => void;
   fetchStories: () => Promise<void>;
   addStory: (storyData: StoryData) => Promise<void>;
   getSortedStoryMedia: (userId: string) => SortedStory[];
@@ -46,9 +54,50 @@ const StoryContext = createContext<StoryContextType | undefined>(undefined);
 export const StoryProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useUser();
   const [stories, setStories] = useState<IStory[]>([]);
+  const [isViewerVisible, setIsViewerVisible] = useState(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const scaleAnim = useRef(new Animated.Value(0)).current;
+  const opacityAnim = useRef(new Animated.Value(0)).current;
+  const [startIndex, setStartIndex] = useState(0);
+
+  const openViewer = (index: number) => {
+    setStartIndex(index);
+    setIsViewerVisible(true);
+    Animated.parallel([
+      Animated.timing(scaleAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+        easing: Easing.out(Easing.ease),
+      }),
+      Animated.timing(opacityAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+        easing: Easing.out(Easing.ease),
+      }),
+    ]).start();
+  };
+
+  const closeViewer = () => {
+    Animated.parallel([
+      Animated.timing(scaleAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+        easing: Easing.in(Easing.ease),
+      }),
+      Animated.timing(opacityAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+        easing: Easing.in(Easing.ease),
+      }),
+    ]).start(() => setIsViewerVisible(false));
+  };
+
   // Function to fetch all stories grouped by user
   const fetchStories = async () => {
     try {
@@ -172,6 +221,12 @@ export const StoryProvider = ({ children }: { children: ReactNode }) => {
         loading,
         uploading,
         error,
+        isViewerVisible,
+        opacityAnim,
+        scaleAnim,
+        startIndex,
+        closeViewer,
+        openViewer,
         fetchStories,
         addStory,
         getSortedStoryMedia,

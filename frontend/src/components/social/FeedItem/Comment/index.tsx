@@ -26,6 +26,8 @@ interface Props {
   handleSendComment: (value: string) => Promise<void>;
   handleSendReply: (value: string, commentId: string) => Promise<void>;
   comments: IComment[];
+  onClose?: () => void;
+  onOpen?: () => void;
   buttonStyle?: StyleProp<ViewStyle>;
   icon?: ReactNode;
 }
@@ -33,6 +35,8 @@ const CommentModal: React.FC<Props> = ({
   buttonStyle,
   icon,
   comments,
+  onClose,
+  onOpen,
   handleSendComment,
   handleSendReply,
 }) => {
@@ -46,6 +50,7 @@ const CommentModal: React.FC<Props> = ({
   const openSheet = () => {
     if (bottomSheetRef) {
       bottomSheetRef.current?.present();
+      onOpen && onOpen();
     }
   };
 
@@ -101,6 +106,7 @@ const CommentModal: React.FC<Props> = ({
             disappearsOnIndex={-1}
           />
         )}
+        onDismiss={onClose}
       >
         <BottomSheetView style={styles.contentContainer}>
           <Text style={styles.headerText}>{comments.length} Comments</Text>

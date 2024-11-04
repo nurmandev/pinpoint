@@ -7,7 +7,6 @@ import {
   likePost,
   reportPost,
   getAllPost,
-  getPostsByLocation,
 } from "../controllers/post";
 import { auth } from "../middleware/auth";
 import multer from "multer";
@@ -15,15 +14,7 @@ import path from "path";
 
 const router = express.Router();
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "uploads/"); // Save files in the "uploads/" folder
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(null, uniqueSuffix + path.extname(file.originalname)); // Save file with a unique name
-  },
-});
+const storage = multer.memoryStorage();
 
 // Multer config
 const upload = multer({
@@ -37,8 +28,6 @@ router.get("/", getAllPost);
 
 // Get a post by ID
 router.get("/:id", auth(), getPostById);
-
-router.get("/location/:locationId", getPostsByLocation);
 
 // Update a post (Only owner can update)
 router.put("/:id", upload.array("media"), auth(["partner"]), updatePost);

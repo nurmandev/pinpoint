@@ -1,6 +1,7 @@
 import React, { createContext, useState, useContext } from "react";
 import { UserData, getUserService, updateUserService } from "../services/user";
 import { User } from "../types/user";
+import { removeValue } from "../utils/storage";
 
 interface UserContextType {
   user: User | null;
@@ -34,6 +35,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   const logout = async () => {
     setUser(null);
+    removeValue("token");
   };
   return (
     <UserContext.Provider

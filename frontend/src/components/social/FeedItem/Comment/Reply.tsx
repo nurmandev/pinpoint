@@ -3,12 +3,16 @@ import { useState } from "react";
 import { View, Image, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Reply as IReply } from "@/src/types/comment";
 import moment from "moment";
+import { imageURL } from "@/src/services/api";
 
 const Reply: React.FC<{ reply: IReply }> = ({ reply }) => {
   const [liked, setLiked] = useState(false);
   return (
     <View style={styles.replyContainer}>
-      <Image source={{ uri: reply.userId.avatarUrl }} style={styles.avatar} />
+      <Image
+        source={{ uri: imageURL + reply.userId.avatarUrl }}
+        style={styles.avatar}
+      />
       <View style={styles.commentContent}>
         <Text style={styles.username}>{reply.userId.username}</Text>
         <Text style={styles.content}>{reply.content}</Text>

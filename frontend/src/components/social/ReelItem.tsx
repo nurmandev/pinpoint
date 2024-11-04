@@ -154,7 +154,7 @@ const ReelItem: React.FC<VideoItemProps> = ({
               style={styles.loadingIndicator}
             />
           )}
-          {/* <Video
+          <Video
             ref={(ref) => {
               videoRefs.current![index] = ref!;
             }}
@@ -163,9 +163,9 @@ const ReelItem: React.FC<VideoItemProps> = ({
             resizeMode={ResizeMode.COVER}
             isLooping
             shouldPlay={false}
-            onLoadStart={() => setLoading(true)} // Start loading indicator
-            onLoad={() => setLoading(false)} // Stop loading indicator when the video is ready
-          /> */}
+            onLoadStart={() => setLoading(true)}
+            onLoad={() => setLoading(false)}
+          />
 
           {showControls && !loading && (
             <Ionicons

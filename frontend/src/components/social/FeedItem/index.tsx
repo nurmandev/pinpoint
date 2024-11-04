@@ -29,13 +29,16 @@ import {
 import { Comment as IComment } from "@/src/types/comment";
 import { imageURL } from "@/src/services/api";
 import useDimensions from "@/src/hooks/useDimension";
+import { IStory } from "@/src/types/story";
+import { useToastNotification } from "@/src/context/ToastNotificationContext";
 
 interface Props {
-  item: Post;
+  item: any;
 }
 
 const FeedItem: React.FC<Props> = ({ item }) => {
   const { likeExistingPost } = usePost();
+  const { addNotification } = useToastNotification();
   const { user } = useUser();
   const { width } = useDimensions();
   const video = useRef<Video>(null);
@@ -44,6 +47,9 @@ const FeedItem: React.FC<Props> = ({ item }) => {
   const [comments, setComments] = useState<IComment[]>([]);
   const [laoding, setLaoding] = useState(true);
   const [error, setError] = useState("");
+  const [isLiked, setIsLiked] = useState(
+    user && item.likes.includes(user?._id)
+  );
 
   const fetchComments = async () => {
     try {
@@ -102,8 +108,13 @@ const FeedItem: React.FC<Props> = ({ item }) => {
   }, [status]);
 
   const handleLike = async () => {
-    if (!user) return;
-    await likeExistingPost(item._id);
+    try {
+      if (!user) return;
+      await likeExistingPost(item._id);
+      setIsLiked(!isLiked);
+    } catch (error: any) {
+      addNotification({ message: error, error: true });
+    }
   };
 
   const renderOption = (item: Post) => (
@@ -180,13 +191,14 @@ const FeedItem: React.FC<Props> = ({ item }) => {
 
   return (
     <View style={styles.feedItem}>
-      {item?.media?.length &&
-      item?.media?.length > 0 &&
-      item?.media[0].type === "video" ? (
+      {(item?.media?.length &&
+        item?.media?.length > 0 &&
+        item?.media[0].type === "video") ||
+      item?.media?.type === "video" ? (
         <>
           <Video
             ref={video}
-            source={{ uri: imageURL + item.media[0].url }}
+            source={{ uri: imageURL + (item.media.url || item.media[0].url) }}
             style={styles.mediaBackground}
             isLooping
             // shouldPlay
@@ -219,11 +231,12 @@ const FeedItem: React.FC<Props> = ({ item }) => {
             </View>
           </View>
         </>
-      ) : item?.media?.length &&
-        item?.media?.length > 0 &&
-        item?.media[0].type === "image" ? (
+      ) : (item?.media?.length &&
+          item?.media?.length > 0 &&
+          item?.media[0].type === "image") ||
+        item?.media?.type === "image" ? (
         <ImageBackground
-          source={{ uri: imageURL + item.media[0].url }}
+          source={{ uri: imageURL + (item?.media?.url || item.media[0].url) }}
           resizeMode="cover"
           style={styles.mediaBackground}
         >
@@ -246,9 +259,9 @@ const FeedItem: React.FC<Props> = ({ item }) => {
       <View style={styles.actions}>
         <TouchableOpacity onPress={handleLike} style={styles.actionButton}>
           <AntDesign
-            name={user && item.likes.includes(user?._id) ? "heart" : "hearto"}
+            name={isLiked ? "heart" : "hearto"}
             size={24}
-            color={user && item.likes.includes(user?._id) ? "red" : "black"}
+            color={isLiked ? "red" : "black"}
           />
         </TouchableOpacity>
         <CommentModal

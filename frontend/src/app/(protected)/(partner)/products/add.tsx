@@ -457,7 +457,6 @@ const AddProduct = () => {
               style={{ marginBottom: 20, height: 100 }}
               multiline
               numberOfLines={3}
-              maxLength={200}
             />
 
             {errors.description ? (

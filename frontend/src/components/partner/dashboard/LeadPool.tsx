@@ -53,11 +53,11 @@ const LeadPool: React.FC = () => {
                 <List.Item
                   key={lead._id}
                   title={lead.customerName}
-                  description={`${lead.service.name}`}
+                  description={`${lead.item.name}`}
                   left={() => (
                     <Avatar.Image
                       size={40}
-                      source={{ uri: imageURL + lead.service.images[0] }}
+                      source={{ uri: imageURL + lead.item.images[0] }}
                     />
                   )}
                   right={() => (
@@ -73,11 +73,11 @@ const LeadPool: React.FC = () => {
                   button={
                     <List.Item
                       title={lead.customerName}
-                      description={`${lead.service.name}`}
+                      description={`${lead.item.name}`}
                       left={() => (
                         <Avatar.Image
                           size={40}
-                          source={{ uri: imageURL + lead.service.images[0] }}
+                          source={{ uri: imageURL + lead.item.images[0] }}
                         />
                       )}
                       right={() => (
