@@ -102,7 +102,7 @@ const CompletedLead: React.FC = () => {
                     />
                   }
                 >
-                  {(close) => <LeadsModal />}
+                  {(close) => <LeadsModal id={lead._id} onClose={close} />}
                 </Modal>
               )
             )

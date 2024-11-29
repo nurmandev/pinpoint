@@ -90,7 +90,7 @@ const LeadPool: React.FC = () => {
                   }
                   key={lead._id}
                 >
-                  {(close) => <LeadsModal />}
+                  {(close) => <LeadsModal id={lead._id} onClose={close} />}
                 </Modal>
               )
             )

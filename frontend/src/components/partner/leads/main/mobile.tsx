@@ -13,7 +13,7 @@ import {
   useTheme,
 } from "react-native-paper";
 
-const type = [
+export const type = [
   { label: "Active Leads", value: "Active" },
   { label: "Pending Leads", value: "Pending" },
   { label: "Leads Pool", value: "Pool" },

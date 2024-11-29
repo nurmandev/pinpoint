@@ -1,13 +1,11 @@
 import { StyleSheet, Text, ScrollView } from "react-native";
 import React from "react";
 import LeadsModal from "@/src/components/partner/leads/LeadModal";
+import { useLocalSearchParams } from "expo-router";
 
 const LeadDetail = () => {
-  return (
-    <ScrollView contentContainerStyle={{ padding: 20 }}>
-      <LeadsModal />
-    </ScrollView>
-  );
+  const { id } = useLocalSearchParams();
+  return <LeadsModal id={id as string} />;
 };
 
 export default LeadDetail;

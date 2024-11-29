@@ -11,7 +11,6 @@ export default function Layout() {
   const { loading, onboardingCompleted } = useAuth();
   const { user } = useUser();
 
-  // You can keep the splash screen open, or render a loading screen like we do here.
   if (loading) {
     return <SplashScreen />;
   }

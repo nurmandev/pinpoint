@@ -91,47 +91,38 @@ const Location = () => {
           {/* Table Rows */}
           <ScrollView style={styles.tableBody}>
             {services.map((item) => (
-              <Modal
-                key={item._id}
-                button={
-                  <View style={styles.tableRow}>
-                    <Text style={styles.tableCell}>{item.name}</Text>
-                    <Text style={styles.tableCell}>
-                      {" "}
-                      {item.priceType === "flat"
-                        ? item.price
-                        : `$${item.priceRange?.from} - $${item.priceRange?.to}`}
-                    </Text>
-                    <Text style={styles.tableCell}>
-                      {item.location.map((loc) => loc.locationName).join(", ")}
-                    </Text>
-                    <Text style={styles.tableCell}>
-                      {item.category.join(", ")}
-                    </Text>
-                    <Text style={styles.tableCell}>
-                      {item.subCategory && item.subCategory.join(", ")}
-                    </Text>
-                    <Text style={styles.tableCell}>
-                      {" "}
-                      {item.options?.map((option) => (
-                        <Text style={styles.variant}> {option.optionName}</Text>
-                      ))}
-                    </Text>
-                    <View style={styles.actionButtons}>
-                      <Feather name="link" size={20} color="gray" />
-                      <Feather
-                        name="edit"
-                        onPress={() => router.push("/services/add")}
-                        size={20}
-                        color="gray"
-                      />
-                      <Ionicons name="trash-outline" size={20} color="red" />
-                    </View>
-                  </View>
-                }
-              >
-                {() => <Details />}
-              </Modal>
+              <View style={styles.tableRow} key={item._id}>
+                <Text style={styles.tableCell}>{item.name}</Text>
+                <Text style={styles.tableCell}>
+                  {" "}
+                  {item.priceType === "flat"
+                    ? item.price
+                    : `$${item.priceRange?.from} - $${item.priceRange?.to}`}
+                </Text>
+                <Text style={styles.tableCell}>
+                  {item.location.map((loc) => loc.locationName).join(", ")}
+                </Text>
+                <Text style={styles.tableCell}>{item.category.join(", ")}</Text>
+                <Text style={styles.tableCell}>
+                  {item.subCategory && item.subCategory.join(", ")}
+                </Text>
+                <Text style={styles.tableCell}>
+                  {" "}
+                  {item.options?.map((option) => (
+                    <Text style={styles.variant}> {option.optionName}</Text>
+                  ))}
+                </Text>
+                <View style={styles.actionButtons}>
+                  <Feather name="link" size={20} color="gray" />
+                  <Feather
+                    name="edit"
+                    onPress={() => router.push("/services/add")}
+                    size={20}
+                    color="gray"
+                  />
+                  <Ionicons name="trash-outline" size={20} color="red" />
+                </View>
+              </View>
             ))}
           </ScrollView>
         </View>

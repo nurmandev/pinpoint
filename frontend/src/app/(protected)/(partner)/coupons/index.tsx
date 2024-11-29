@@ -88,6 +88,7 @@ const Coupons = () => {
           <View
             style={{ flex: 1, flexWrap: "wrap", gap: 15, flexDirection: "row" }}
           >
+            {data.length <= 0 && <Text>No coupon available</Text>}
             {data.map((item: any) => (
               <TouchableOpacity
                 onPress={() => router.push("/coupons/uhh")}

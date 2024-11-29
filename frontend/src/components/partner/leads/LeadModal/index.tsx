@@ -8,6 +8,7 @@ import {
   FlatList,
   Image,
   Pressable,
+  ScrollView,
 } from "react-native";
 import {
   Card,
@@ -35,21 +36,22 @@ import Complete from "./Complete";
 import Modify from "./Modify";
 import Decline from "./Decline";
 
-interface ModalProps {}
+interface ModalProps {
+  onClose?: () => void;
+  id: string;
+}
 
-const LeadsModal: React.FC<ModalProps> = () => {
+const LeadsModal: React.FC<ModalProps> = ({ id, onClose }) => {
   const { colors } = useTheme();
   const { addLeadNote, fetchLeadById, updateStatus } = useLead();
   const [note, setNote] = useState("");
   const { addNotification } = useToastNotification();
   const { setCurrentConversation, messages } = useMessage();
-  const { id } = useLocalSearchParams();
   const [lead, setLead] = useState<Lead>();
   const [loading, setLoading] = useState(true);
   const [addingNote, setAddingNote] = useState(false);
   const [editNote, setEditNote] = useState(false);
   const [approving, setApproving] = useState(false);
-  const [declining, setDeclining] = useState(false);
 
   useEffect(() => {
     const fetchLead = async () => {
@@ -130,284 +132,287 @@ const LeadsModal: React.FC<ModalProps> = () => {
   return loading ? (
     <ActivityIndicator />
   ) : (
-    <View style={styles.card}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.serviceTitle}>
-          {lead?.item.name}{" "}
-          <Text style={styles.price}>
-            {" "}
-            {lead?.modifyPrice
-              ? `$${lead.modifyPrice}`
-              : lead?.item?.priceType === "range"
-              ? `$${lead?.item?.priceRange?.from} - $${lead?.item?.priceRange?.to}`
-              : `$${lead?.item?.price}`}
-          </Text>{" "}
-          -{" "}
-          <Text
-            style={[
-              styles.status,
-              {
-                color:
-                  lead?.status === "Active"
-                    ? colors.primary
-                    : lead?.status === "Complete"
-                    ? "green"
-                    : "#f39c12",
-              },
-            ]}
-          >
-            {lead?.status} <Text>{lead?.modifyPrice ? " - Modify" : null}</Text>
-          </Text>
-        </Text>
-      </View>
-
-      {/* Sub details */}
-      <Text style={[styles.subDetails, { color: colors.primary }]}>
-        Sub Category / Variant Category:{" "}
-        <Text style={{ color: "black" }}>Option</Text>
-      </Text>
-      <Text style={styles.location}>{lead?.location.locationName}</Text>
-
-      {/* User Info */}
-      <View style={styles.userInfo}>
-        <View style={{ flexDirection: "row", alignItems: "center" }}>
-          <Avatar.Image
-            size={50}
-            source={{ uri: imageURL + lead?.user.avatarUrl }}
-          />
-          <View style={styles.userDetails}>
-            <Text style={styles.userName}>{lead?.customerName}</Text>
-            <Text style={styles.textGray}>{lead?.email}</Text>
-          </View>
-        </View>
-        <Text style={styles.pendingBadge}>{lead?.status} Lead</Text>
-      </View>
-
-      {/* Contact Info */}
-      <View style={styles.contactInfo}>
-        <View style={styles.detail}>
-          <Ionicons name="calendar-outline" color="gray" />
-          <View>
-            <Text style={{ color: "gray" }}>Date & Time</Text>
-            <Text>
+    <ScrollView contentContainerStyle={{ padding: 20 }}>
+      <View style={styles.card}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.serviceTitle}>
+            {lead?.item.name}{" "}
+            <Text style={styles.price}>
               {" "}
-              {moment(
-                lead?.modifyDate ? lead.modifyDate : lead?.serviceRequestDate
-              ).calendar()}
+              {lead?.modifyPrice
+                ? `$${lead.modifyPrice}`
+                : lead?.item?.priceType === "range"
+                ? `$${lead?.item?.priceRange?.from} - $${lead?.item?.priceRange?.to}`
+                : `$${lead?.item?.price}`}
+            </Text>{" "}
+            -{" "}
+            <Text
+              style={[
+                styles.status,
+                {
+                  color:
+                    lead?.status === "Active"
+                      ? colors.primary
+                      : lead?.status === "Complete"
+                      ? "green"
+                      : "#f39c12",
+                },
+              ]}
+            >
+              {lead?.status}{" "}
+              <Text>{lead?.modifyPrice ? " - Modify" : null}</Text>
             </Text>
-          </View>
+          </Text>
         </View>
-        {lead?.phone && (
-          <View style={styles.detail}>
-            <Ionicons name="call-outline" color="gray" />
-            <View>
-              <Text style={{ color: "gray" }}>Phone</Text>
-              <Text> {lead?.phone}</Text>
-            </View>
-          </View>
-        )}
-        {lead?.address && (
-          <View style={styles.detail}>
-            <Ionicons name="location-outline" color="gray" />
-            <View>
-              <Text style={{ color: "gray" }}>Address</Text>
-              <Text> {lead?.address}</Text>
-            </View>
-          </View>
-        )}
-      </View>
 
-      {/* Other De3tails */}
-      <View style={styles.otherDetails}>
-        <Text style={styles.sectionTitle}>Other Details</Text>
-        <Text style={styles.textGray}>Urgency</Text>
-        <Text style={{ marginBottom: 15 }}> Important</Text>
-        {lead?.contactMethod && (
-          <>
-            <Text style={styles.textGray}>Preferred Method of Contact</Text>
-            <Text style={{ marginBottom: 15 }}> {lead?.contactMethod}</Text>
-          </>
-        )}
-        <Text style={styles.textGray}>Additional Details</Text>
-        <Text style={{ marginBottom: 15 }}>{lead?.details}</Text>
-        {lead?.uploadedMedia && lead.uploadedMedia.length > 0 && (
-          <Modal
-            button={
-              <Text style={{ color: colors.primary, fontWeight: "500" }}>
-                View attachments <Ionicons name="attach" size={16} />
-              </Text>
-            }
-          >
-            {() => (
-              <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
-                {lead!.uploadedMedia!.map((image, index) => (
-                  <Image
-                    key={index}
-                    source={{ uri: imageURL + image }}
-                    style={{ width: 100, height: 100 }}
-                  />
-                ))}
-              </View>
-            )}
-          </Modal>
-        )}
-      </View>
+        {/* Sub details */}
+        <Text style={[styles.subDetails, { color: colors.primary }]}>
+          Sub Category / Variant Category:{" "}
+          <Text style={{ color: "black" }}>Option</Text>
+        </Text>
+        <Text style={styles.location}>{lead?.location.locationName}</Text>
 
-      <Chat status={lead?.status} />
-
-      {/* Notes Section */}
-      <View style={styles.notesSection}>
-        <View style={{ flexDirection: "row", gap: 5, alignItems: "center" }}>
-          <Text style={styles.sectionTitle}>Notes</Text>
-          {lead?.note && lead?.status !== "Complete" && (
-            <Feather
-              name="edit"
-              onPress={handleEditNote}
-              size={16}
-              style={{ marginBottom: 5 }}
+        {/* User Info */}
+        <View style={styles.userInfo}>
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <Avatar.Image
+              size={50}
+              source={{ uri: imageURL + lead?.user.avatarUrl }}
             />
+            <View style={styles.userDetails}>
+              <Text style={styles.userName}>{lead?.customerName}</Text>
+              <Text style={styles.textGray}>{lead?.email}</Text>
+            </View>
+          </View>
+          <Text style={styles.pendingBadge}>{lead?.status} Lead</Text>
+        </View>
+
+        {/* Contact Info */}
+        <View style={styles.contactInfo}>
+          <View style={styles.detail}>
+            <Ionicons name="calendar-outline" color="gray" />
+            <View>
+              <Text style={{ color: "gray" }}>Date & Time</Text>
+              <Text>
+                {" "}
+                {moment(
+                  lead?.modifyDate ? lead.modifyDate : lead?.serviceRequestDate
+                ).calendar()}
+              </Text>
+            </View>
+          </View>
+          {lead?.phone && (
+            <View style={styles.detail}>
+              <Ionicons name="call-outline" color="gray" />
+              <View>
+                <Text style={{ color: "gray" }}>Phone</Text>
+                <Text> {lead?.phone}</Text>
+              </View>
+            </View>
+          )}
+          {lead?.address && (
+            <View style={styles.detail}>
+              <Ionicons name="location-outline" color="gray" />
+              <View>
+                <Text style={{ color: "gray" }}>Address</Text>
+                <Text> {lead?.address}</Text>
+              </View>
+            </View>
           )}
         </View>
-        {editNote && lead?.status !== "Complete" ? (
-          <>
-            <PaperInput
-              mode="outlined"
-              label="Notes"
-              value={note}
-              onChangeText={setNote}
-              multiline
-              numberOfLines={3}
-              maxLength={100}
-              style={styles.noteInput}
-            />
-            <Text style={styles.charCount}>{note.length}/100 characters</Text>
-            <Pressable
-              disabled={addingNote}
-              onPress={handleAddNote}
-              style={styles.addnote}
-            >
-              {addingNote ? (
-                <ActivityIndicator size={10} />
-              ) : (
-                <Text style={{ fontSize: 12, color: "#9f9d9d" }}>Add Note</Text>
-              )}
-            </Pressable>
-          </>
-        ) : (
-          <Text>{lead?.note}</Text>
-        )}
-      </View>
 
-      {/* Action Buttons */}
-      {lead?.status === "Pending" &&
-        ((lead.item as any).type === "Service" ? (
+        {/* Other De3tails */}
+        <View style={styles.otherDetails}>
+          <Text style={styles.sectionTitle}>Other Details</Text>
+          <Text style={styles.textGray}>Urgency</Text>
+          <Text style={{ marginBottom: 15 }}> Important</Text>
+          {lead?.contactMethod && (
+            <>
+              <Text style={styles.textGray}>Preferred Method of Contact</Text>
+              <Text style={{ marginBottom: 15 }}> {lead?.contactMethod}</Text>
+            </>
+          )}
+          <Text style={styles.textGray}>Additional Details</Text>
+          <Text style={{ marginBottom: 15 }}>{lead?.details}</Text>
+          {lead?.uploadedMedia && lead.uploadedMedia.length > 0 && (
+            <Modal
+              button={
+                <Text style={{ color: colors.primary, fontWeight: "500" }}>
+                  View attachments <Ionicons name="attach" size={16} />
+                </Text>
+              }
+            >
+              {() => (
+                <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+                  {lead!.uploadedMedia!.map((image, index) => (
+                    <Image
+                      key={index}
+                      source={{ uri: imageURL + image }}
+                      style={{ width: 100, height: 100 }}
+                    />
+                  ))}
+                </View>
+              )}
+            </Modal>
+          )}
+        </View>
+
+        <Chat status={lead?.status} />
+
+        {/* Notes Section */}
+        <View style={styles.notesSection}>
+          <View style={{ flexDirection: "row", gap: 5, alignItems: "center" }}>
+            <Text style={styles.sectionTitle}>Notes</Text>
+            {lead?.note && lead?.status !== "Complete" && (
+              <Feather
+                name="edit"
+                onPress={handleEditNote}
+                size={16}
+                style={{ marginBottom: 5 }}
+              />
+            )}
+          </View>
+          {editNote && lead?.status !== "Complete" ? (
+            <>
+              <PaperInput
+                mode="outlined"
+                label="Notes"
+                value={note}
+                onChangeText={setNote}
+                multiline
+                numberOfLines={3}
+                maxLength={100}
+                style={styles.noteInput}
+              />
+              <Text style={styles.charCount}>{note.length}/100 characters</Text>
+              <Pressable
+                disabled={addingNote}
+                onPress={handleAddNote}
+                style={styles.addnote}
+              >
+                {addingNote ? (
+                  <ActivityIndicator size={10} />
+                ) : (
+                  <Text style={{ fontSize: 12, color: "#9f9d9d" }}>
+                    Add Note
+                  </Text>
+                )}
+              </Pressable>
+            </>
+          ) : (
+            <Text>{lead?.note}</Text>
+          )}
+        </View>
+
+        {/* Action Buttons */}
+        {lead?.status === "Pending" &&
+          ((lead.item as any).type === "Service" ? (
+            <View style={styles.actionButtons}>
+              <Modal
+                button={
+                  <Button
+                    variant="outlined"
+                    containerStyle={[styles.declineButton]}
+                    disabled
+                  >
+                    Decline
+                  </Button>
+                }
+                buttonStyle={{ flex: 1 }}
+              >
+                {(close) => (
+                  <Decline close={close} id={lead!._id} setLead={setLead} />
+                )}
+              </Modal>
+              <Button
+                onPress={approveLead}
+                variant="contained"
+                containerStyle={styles.approveButton}
+                loading={approving}
+              >
+                Approve
+              </Button>
+            </View>
+          ) : (
+            <View style={styles.actionButtons}>
+              <Modal
+                button={
+                  <Button
+                    variant="outlined"
+                    containerStyle={[styles.declineButton]}
+                  >
+                    Pending Sale
+                  </Button>
+                }
+                buttonStyle={{ flex: 1 }}
+              >
+                {(close) => <></>}
+              </Modal>
+              <Button
+                // onPress={approveLead}
+                variant="contained"
+                containerStyle={styles.approveButton}
+                loading={approving}
+              >
+                Complete
+              </Button>
+            </View>
+          ))}
+
+        {lead?.status === "Active" && (
           <View style={styles.actionButtons}>
             <Modal
               button={
                 <Button
                   variant="outlined"
                   containerStyle={[styles.declineButton]}
-                  loading={declining}
                   disabled
                 >
-                  Decline
+                  Modify
                 </Button>
               }
               buttonStyle={{ flex: 1 }}
             >
               {(close) => (
-                <Decline close={close} id={lead!._id} setLead={setLead} />
+                <Modify close={close} id={lead!._id} setLead={setLead} />
               )}
             </Modal>
-            <Button
-              onPress={approveLead}
-              variant="contained"
-              containerStyle={styles.approveButton}
-              loading={approving}
-            >
-              Approve
-            </Button>
-          </View>
-        ) : (
-          <View style={styles.actionButtons}>
             <Modal
               button={
                 <Button
-                  variant="outlined"
-                  containerStyle={[styles.declineButton]}
-                  loading={declining}
+                  variant="contained"
+                  containerStyle={[
+                    { backgroundColor: colors.primary, flex: 1 },
+                  ]}
+                  loading={approving}
                   disabled
                 >
-                  Pending Sale
+                  Complete
                 </Button>
               }
               buttonStyle={{ flex: 1 }}
             >
-              {(close) => <></>}
+              {(close) => (
+                <Complete close={close} id={lead!._id} setLead={setLead} />
+              )}
             </Modal>
+          </View>
+        )}
+        {lead?.status === "Complete" && (
+          <View style={styles.actionButtons}>
             <Button
-              // onPress={approveLead}
+              // onPress={completeLead}
               variant="contained"
               containerStyle={styles.approveButton}
               loading={approving}
             >
-              Complete
+              Print
             </Button>
           </View>
-        ))}
-
-      {lead?.status === "Active" && (
-        <View style={styles.actionButtons}>
-          <Modal
-            button={
-              <Button
-                variant="outlined"
-                containerStyle={[styles.declineButton]}
-                loading={declining}
-                disabled
-              >
-                Modify
-              </Button>
-            }
-            buttonStyle={{ flex: 1 }}
-          >
-            {(close) => (
-              <Modify close={close} id={lead!._id} setLead={setLead} />
-            )}
-          </Modal>
-          <Modal
-            button={
-              <Button
-                variant="contained"
-                containerStyle={[{ backgroundColor: colors.primary, flex: 1 }]}
-                loading={approving}
-                disabled
-              >
-                Complete
-              </Button>
-            }
-            buttonStyle={{ flex: 1 }}
-          >
-            {(close) => (
-              <Complete close={close} id={lead!._id} setLead={setLead} />
-            )}
-          </Modal>
-        </View>
-      )}
-      {lead?.status === "Complete" && (
-        <View style={styles.actionButtons}>
-          <Button
-            // onPress={completeLead}
-            variant="contained"
-            containerStyle={styles.approveButton}
-            loading={approving}
-          >
-            Print
-          </Button>
-        </View>
-      )}
-    </View>
+        )}
+      </View>
+    </ScrollView>
   );
 };
 

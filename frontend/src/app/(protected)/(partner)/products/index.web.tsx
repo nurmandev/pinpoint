@@ -8,7 +8,6 @@ import { Feather, Ionicons } from "@expo/vector-icons";
 import { products, rated } from "@/src/utils/data/product";
 import Rating from "@/src/components/Rating";
 import Modal from "@/src/components/modals/modal";
-import Details from "@/src/components/partner/product/details";
 import { useProduct } from "@/src/context/Product";
 import { IProduct } from "@/src/types/product";
 import ProductDetailWeb from "@/src/components/partner/product/webDetail";

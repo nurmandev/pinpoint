@@ -56,6 +56,7 @@ const Badges = () => {
       <Text style={{ marginVertical: 10, fontSize: 18, fontWeight: "600" }}>
         Leads Badges
       </Text>
+      {data.length <= 0 && <Text>No badge available</Text>}
 
       <FlatList
         data={data}

@@ -92,6 +92,7 @@ const ActiveLeadsCard: React.FC = () => {
                     variant="outlined"
                     containerStyle={{ paddingVertical: 8, borderWidth: 0 }}
                     textStyle={{ color: colors.primary }}
+                    loading={approving}
                     onPress={() => approveLead(lead._id)}
                   >
                     Complete
@@ -119,6 +120,7 @@ const ActiveLeadsCard: React.FC = () => {
                     variant="outlined"
                     containerStyle={{ paddingVertical: 8, borderWidth: 0 }}
                     textStyle={{ color: colors.primary }}
+                    loading={approving}
                     onPress={() => approveLead(lead._id)}
                   >
                     Complete

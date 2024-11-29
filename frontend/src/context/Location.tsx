@@ -15,6 +15,7 @@ import {
   LocationData,
 } from "../services/location";
 import { Location } from "../types/location";
+import { useUser } from "./User";
 
 interface LocationContextType {
   locations: Location[];
@@ -39,6 +40,7 @@ interface LocationProviderProps {
 }
 
 export const LocationProvider = ({ children }: LocationProviderProps) => {
+  const { user } = useUser();
   const [locations, setLocations] = useState<Location[]>([]);
 
   // Function to load all user locations
@@ -103,8 +105,10 @@ export const LocationProvider = ({ children }: LocationProviderProps) => {
   };
 
   useEffect(() => {
-    loadUserLocations();
-  }, []);
+    if (user) {
+      loadUserLocations();
+    }
+  }, [user]);
 
   const value: LocationContextType = {
     locations,

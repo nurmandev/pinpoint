@@ -10,7 +10,7 @@ import { Lead } from "@/src/types/lead";
 interface Props {
   close: () => void;
   id: string;
-  setLead: (data: Lead) => void;
+  setLead?: (data: Lead) => void;
 }
 const Decline: React.FC<Props> = ({ close, id, setLead }) => {
   const { addNotification } = useToastNotification();
@@ -31,7 +31,7 @@ const Decline: React.FC<Props> = ({ close, id, setLead }) => {
         reason: "Location Declined",
       });
       console.log("result", res);
-      setLead(res);
+      setLead && setLead(res);
       addNotification({ message: "Lead marked as Decline" });
       close();
     } catch (error: any) {

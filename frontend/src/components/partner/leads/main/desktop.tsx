@@ -3,7 +3,7 @@ import Button from "@/src/components/Button";
 import Modal from "@/src/components/modals/modal";
 import LeadsModal from "@/src/components/partner/leads/LeadModal";
 import { Feather, Ionicons } from "@expo/vector-icons";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { View, StyleSheet, ScrollView, Pressable } from "react-native";
 import {
   Appbar,
@@ -13,7 +13,15 @@ import {
   IconButton,
   useTheme,
   Checkbox,
+  ActivityIndicator,
 } from "react-native-paper";
+import { type } from "./mobile";
+import { useLead } from "@/src/context/Lead";
+import { useToastNotification } from "@/src/context/ToastNotificationContext";
+import moment from "moment";
+import Decline from "../LeadModal/Decline";
+import Complete from "../LeadModal/Complete";
+import Modify from "../LeadModal/Modify";
 
 const data = Array.from({ length: 6 }, (_, index) => ({
   id: index,
@@ -25,10 +33,43 @@ const data = Array.from({ length: 6 }, (_, index) => ({
 }));
 
 const LeadsDesktop: React.FC = () => {
+  const { leads, fetchPartnerLeads, updateStatus } = useLead();
+  const { addNotification } = useToastNotification();
   const [search, setSearch] = useState("");
   const { colors } = useTheme();
   const [currentTab, setCurrentTab] = useState("Pending");
-  const [modalVisible, setModalVisible] = useState(false);
+  const [approving, setApproving] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchLLeads = async () => {
+      try {
+        setLoading(true);
+        await fetchPartnerLeads(
+          currentTab === "Completed" ? "Complete" : currentTab
+        );
+      } catch (error: any) {
+        addNotification({ message: error });
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchLLeads();
+  }, [currentTab]);
+
+  const approveLead = async (id: string) => {
+    try {
+      setApproving(true);
+      const res = await updateStatus(id, { status: "Active" });
+      await fetchPartnerLeads(
+        currentTab === "Completed" ? "Complete" : currentTab
+      );
+    } catch (error: any) {
+      addNotification({ message: error, error: true });
+    } finally {
+      setApproving(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -44,20 +85,20 @@ const LeadsDesktop: React.FC = () => {
 
       {/* Tabs */}
       <View style={styles.tabs}>
-        {["Pending", "Active", "Lead Pool", "Completed"].map((item) => (
+        {type.map((item) => (
           <Text
-            key={item}
+            key={item.value}
             style={[
               styles.tabText,
-              currentTab === item && {
+              currentTab === item.value && {
                 color: colors.primary,
                 borderBottomColor: colors.primary,
                 borderBottomWidth: 2,
               },
             ]}
-            onPress={() => setCurrentTab(item)}
+            onPress={() => setCurrentTab(item.value)}
           >
-            {item}
+            {item.label}
           </Text>
         ))}
       </View>
@@ -132,50 +173,164 @@ const LeadsDesktop: React.FC = () => {
 
       {/* Table Rows */}
       <ScrollView style={styles.tableBody}>
-        {data.map((item) => (
-          <Modal
-            key={item.id}
-            button={
-              <View style={styles.tableRow}>
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    flex: 1,
-                  }}
-                >
-                  <Checkbox.Android
-                    status="unchecked"
-                    uncheckedColor="#e1e1e1"
-                  />
-                  <Text style={styles.tableCell}>{item.username}</Text>
-                </View>
-                <Text style={styles.tableCell}>{item.service}</Text>
-                <Text style={styles.tableCell}>{item.location}</Text>
-                <Text style={styles.tableCell}>{item.date}</Text>
-                <Text style={styles.tableCell}>{item.price}</Text>
-                <View style={styles.actionButtons}>
-                  <Button
-                    variant="contained"
-                    containerStyle={styles.approveButton}
-                    textStyle={{ color: "#148F80", fontWeight: "400" }}
+        {loading ? (
+          <ActivityIndicator />
+        ) : leads.length <= 0 ? (
+          <Text>No {currentTab} lead available</Text>
+        ) : (
+          leads.map((item) => (
+            <Modal
+              key={item._id}
+              button={
+                <View style={styles.tableRow}>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      flex: 1,
+                    }}
                   >
-                    Approve
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    containerStyle={styles.declineButton}
-                    textStyle={{ color: "#D63232", fontWeight: "400" }}
-                  >
-                    Decline
-                  </Button>
+                    <Checkbox.Android
+                      status="unchecked"
+                      uncheckedColor="#e1e1e1"
+                    />
+                    <Text style={styles.tableCell}>{item.customerName}</Text>
+                  </View>
+                  <Text style={styles.tableCell}>{item.item.name}</Text>
+                  <Text style={styles.tableCell}>
+                    {item.location.locationName}
+                  </Text>
+                  <Text style={styles.tableCell}>
+                    {moment(item.createdAt).calendar()}
+                  </Text>
+                  <Text style={styles.tableCell}>
+                    {item?.modifyPrice
+                      ? `$${item.modifyPrice}`
+                      : item?.item?.priceType === "range"
+                      ? `$${item?.item?.priceRange?.from} - $${item?.item?.priceRange?.to}`
+                      : `$${item?.item?.price}`}
+                  </Text>
+                  <View style={styles.actionButtons}>
+                    {item?.status === "Pending" &&
+                      (item.item.type === "Service" ? (
+                        <>
+                          <Button
+                            variant="contained"
+                            containerStyle={styles.approveButton}
+                            textStyle={{ color: "#148F80", fontWeight: "400" }}
+                            onPress={() => approveLead(item._id)}
+                            loading={approving}
+                          >
+                            Approve
+                          </Button>
+                          <Modal
+                            button={
+                              <Button
+                                variant="outlined"
+                                containerStyle={styles.declineButton}
+                                textStyle={{
+                                  color: "#D63232",
+                                  fontWeight: "400",
+                                }}
+                                disabled
+                              >
+                                Decline
+                              </Button>
+                            }
+                            buttonStyle={{ flex: 1 }}
+                          >
+                            {(close) => (
+                              <Decline close={close} id={item!._id} />
+                            )}
+                          </Modal>
+                        </>
+                      ) : (
+                        <>
+                          <Button
+                            variant="contained"
+                            containerStyle={styles.approveButton}
+                            textStyle={{ color: "#148F80", fontWeight: "400" }}
+                          >
+                            Complete
+                          </Button>
+                          <Modal
+                            button={
+                              <Button
+                                variant="outlined"
+                                containerStyle={styles.declineButton}
+                                textStyle={{
+                                  color: "#D67732",
+                                  fontWeight: "400",
+                                }}
+                                disabled
+                              >
+                                Pending Sales
+                              </Button>
+                            }
+                            buttonStyle={{ flex: 1 }}
+                          >
+                            {(close) => <></>}
+                          </Modal>
+                        </>
+                      ))}
+                    {item?.status === "Active" && (
+                      <>
+                        <Modal
+                          button={
+                            <Button
+                              variant="contained"
+                              containerStyle={styles.approveButton}
+                              textStyle={{
+                                color: "#148F80",
+                                fontWeight: "400",
+                              }}
+                              disabled
+                            >
+                              Complete
+                            </Button>
+                          }
+                          buttonStyle={{ flex: 1 }}
+                        >
+                          {(close) => <Complete close={close} id={item!._id} />}
+                        </Modal>
+                        <Modal
+                          button={
+                            <Button
+                              variant="outlined"
+                              containerStyle={[styles.declineButton]}
+                              disabled
+                              textStyle={{
+                                color: "#D67732",
+                                fontWeight: "400",
+                              }}
+                            >
+                              Modify
+                            </Button>
+                          }
+                          buttonStyle={{ flex: 1 }}
+                        >
+                          {(close) => <Modify close={close} id={item!._id} />}
+                        </Modal>
+                      </>
+                    )}
+                    {item.status === "Complete" && (
+                      <Text
+                        style={{
+                          color: item.reason === "Complete" ? "green" : "red",
+                          flex: 1,
+                        }}
+                      >
+                        {item.reason}
+                      </Text>
+                    )}
+                  </View>
                 </View>
-              </View>
-            }
-          >
-            {(close) => <LeadsModal />}
-          </Modal>
-        ))}
+              }
+            >
+              {(close) => <LeadsModal id={item._id} onClose={close} />}
+            </Modal>
+          ))
+        )}
       </ScrollView>
 
       {/* Pagination */}
@@ -266,6 +421,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     flex: 1,
+    gap: 4,
   },
   approveButton: {
     marginRight: 5,

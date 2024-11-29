@@ -10,7 +10,7 @@ import { Lead } from "@/src/types/lead";
 interface Props {
   close: () => void;
   id: string;
-  setLead: (data: Lead) => void;
+  setLead?: (data: Lead) => void;
 }
 const Complete: React.FC<Props> = ({ close, id, setLead }) => {
   const { addNotification } = useToastNotification();
@@ -31,7 +31,7 @@ const Complete: React.FC<Props> = ({ close, id, setLead }) => {
         reason: reason === "Successful" ? "Awaiting Customer Review" : reason,
       });
       console.log("result", res);
-      setLead(res);
+      setLead && setLead(res);
       addNotification({ message: "Lead marked as Complete" });
       close();
     } catch (error: any) {

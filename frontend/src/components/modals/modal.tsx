@@ -85,6 +85,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: 8,
     padding: 16,
+    paddingTop: 25,
     maxHeight: "90%",
   },
   info: { fontWeight: "500", fontSize: 18 },

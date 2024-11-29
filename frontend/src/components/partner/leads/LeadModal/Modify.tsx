@@ -11,7 +11,7 @@ import { Lead } from "@/src/types/lead";
 interface Props {
   close: () => void;
   id: string;
-  setLead: (data: Lead) => void;
+  setLead?: (data: Lead) => void;
 }
 
 const Modify: React.FC<Props> = ({ close, id, setLead }) => {

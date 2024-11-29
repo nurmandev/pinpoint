@@ -61,9 +61,15 @@ const PendingLeadsCard: React.FC = () => {
                     />
                   )}
                   right={() => (
-                    <Text style={styles.time}>
-                      {moment(lead.createdAt).fromNow()}
-                    </Text>
+                    <View>
+                      <Text style={[styles.time, { marginBottom: 5 }]}>
+                        {moment(lead.createdAt).fromNow()}
+                      </Text>
+
+                      <Text style={styles.time}>
+                        {lead.location.locationName}
+                      </Text>
+                    </View>
                   )}
                   style={styles.listItem}
                   onPress={() => router.push(`/leads/${lead._id}`)}
@@ -82,15 +88,21 @@ const PendingLeadsCard: React.FC = () => {
                         />
                       )}
                       right={() => (
-                        <Text style={styles.time}>
-                          {moment(lead.createdAt).fromNow()}
-                        </Text>
+                        <View>
+                          <Text style={[styles.time, { marginBottom: 5 }]}>
+                            {moment(lead.createdAt).fromNow()}
+                          </Text>
+
+                          <Text style={styles.time}>
+                            {lead.location.locationName}
+                          </Text>
+                        </View>
                       )}
                       style={styles.listItem}
                     />
                   }
                 >
-                  {(close) => <LeadsModal />}
+                  {(close) => <LeadsModal id={lead._id} onClose={close} />}
                 </Modal>
               )
             )
@@ -120,7 +132,7 @@ const styles = StyleSheet.create({
   time: {
     fontSize: 12,
     color: "#999",
-    alignSelf: "center",
+    alignSelf: "flex-end",
   },
 });
 
