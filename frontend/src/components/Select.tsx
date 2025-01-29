@@ -54,8 +54,11 @@ const Select: React.FC<CustomSelectProps> = ({
         onPress={() => setIsModalVisible(true)}
       >
         <Text style={[styles.input, inputStyle]}>
-          {options.find((option) => option.value === selectedValue)?.label ||
-            placeholder}
+          {options.find(
+            (option) =>
+              `${option.value}`.toLowerCase() ===
+              `${selectedValue}`.toLowerCase()
+          )?.label || placeholder}
         </Text>
         <Ionicons name="chevron-down" size={24} color="#888" />
         {error ? (

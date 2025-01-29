@@ -1,5 +1,9 @@
 import express from "express";
-import { getUserData, updateUserData } from "../controllers/user";
+import {
+  deleteAccount,
+  getUserData,
+  updateUserData,
+} from "../controllers/user";
 import { auth } from "../middleware/auth";
 import multer from "multer";
 import path from "path";
@@ -17,5 +21,6 @@ const upload = multer({
 // Get logged-in user data route
 router.get("/profile", auth(), getUserData);
 router.put("/", auth(), upload.array("media"), updateUserData);
+router.delete("/", auth(), deleteAccount);
 
 export default router;

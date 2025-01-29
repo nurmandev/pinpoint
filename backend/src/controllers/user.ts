@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import User from "../models/user";
 import { CustomRequest } from "../middleware/auth";
 import { uploadMediaToS3 } from "../utils/media";
+import { parseJSONField } from "../utils/common";
 
 export const getUserData = async (req: CustomRequest, res: Response) => {
   try {
@@ -24,8 +25,8 @@ export const getUserData = async (req: CustomRequest, res: Response) => {
 export const updateUserData = async (req: CustomRequest, res: Response) => {
   try {
     const userId = req.user!._id;
-    const { firstName, lastName, state, city } = req.body;
-
+    const { firstName, lastName, state, city, notification } = req.body;
+    console.log(req.body);
     const user = await User.findById(userId).select(
       "-password -verificationCode -verificationCodeExpires"
     );
@@ -34,7 +35,7 @@ export const updateUserData = async (req: CustomRequest, res: Response) => {
       res.status(404).json({ message: "User not found" });
       return;
     }
-
+    const parsedNotification = parseJSONField(notification, "notification");
     const imageUploadPromises: Promise<any>[] = [];
     console.log(req.files);
     if (req.files && Array.isArray(req.files)) {
@@ -52,6 +53,7 @@ export const updateUserData = async (req: CustomRequest, res: Response) => {
     user.lastName = lastName || user.lastName;
     user.state = state || user.state;
     user.city = city || user.city;
+    user.notification = parsedNotification || user.notification;
     user.avatarUrl =
       imageUploadResults.length > 0
         ? imageUploadResults[0].url
@@ -59,6 +61,22 @@ export const updateUserData = async (req: CustomRequest, res: Response) => {
 
     await user.save();
     res.status(200).json({ user });
+  } catch (error) {
+    res.status(500).json({ message: "Internal Server Error", error });
+  }
+};
+
+export const deleteAccount = async (req: CustomRequest, res: Response) => {
+  try {
+    const userId = req.user!._id;
+    const user = await User.findById(userId);
+    if (!user) {
+      res.status(404).json({ message: "User not found" });
+      return;
+    }
+    user.delected = true;
+    user.save();
+    res.json("User delected successfully");
   } catch (error) {
     res.status(500).json({ message: "Internal Server Error", error });
   }

@@ -1,37 +1,49 @@
 import axiosInstance from "./api";
+import * as ImageManipulator from "expo-image-manipulator";
 
-// Interface for the Post data
 export interface PostData {
   content: string;
-  media?: { url: string; name: string }[];
+  media?: { url: string; name: string; type?: string }[];
   location?: string;
 }
 
-// Create a new post (Only partners)
 export const createPost = async (data: PostData) => {
-  const formData = new FormData();
-  formData.append("content", data.content);
-  if (data?.location) {
-    formData.append("location", data?.location);
-  }
-
-  if (data.media) {
-    for (let i = 0; i < data.media.length; i++) {
-      //@ts-ignore
-      formData.append("media", {
-        uri: data.media[i].url,
-        name: data.media[i].name,
-      });
-    }
-  }
-
   try {
-    const response = await axiosInstance.post("/posts", formData);
+    const formData = new FormData();
+    formData.append("content", data.content);
+
+    if (data.location) {
+      formData.append("location", data.location);
+    }
+
+    if (data.media && data.media.length > 0) {
+      for (const mediaItem of data.media) {
+        // Compress and resize media before appending
+        const processedUri = await ImageManipulator.manipulateAsync(
+          mediaItem.url,
+          [{ resize: { width: 800 } }],
+          { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG }
+        );
+
+        formData.append("media", {
+          uri: processedUri.uri,
+          name: mediaItem.name,
+          type: mediaItem.type || "image/jpeg",
+        } as any);
+      }
+    }
+
+    const response = await axiosInstance.post("/posts", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
     return response.data;
   } catch (error: any) {
-    // Handle error here
-    console.log(error);
-    throw new Error(error?.response?.data?.message || "Error creating post");
+    console.error("Error creating post:", error);
+    const message = error?.response?.data?.message || "Error creating post";
+    throw new Error(message);
   }
 };
 

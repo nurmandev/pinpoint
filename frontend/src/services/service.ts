@@ -167,7 +167,11 @@ export const createService = async (serviceData: ServiceData) => {
         formData.append(`options[${index}][optionName]`, option.optionName);
       });
     }
-    const response = await axiosInstance.post(`/services`, formData);
+    const response = await axiosInstance.post(`/services`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
     return response.data.service;
   } catch (error) {
     console.error("Error creating service:", getBackendErrorMessage(error));

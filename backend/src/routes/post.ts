@@ -1,4 +1,4 @@
-import express, { Request } from "express";
+import express from "express";
 import {
   createPost,
   getPostById,
@@ -10,7 +10,6 @@ import {
 } from "../controllers/post";
 import { auth } from "../middleware/auth";
 import multer from "multer";
-import path from "path";
 
 const router = express.Router();
 
@@ -23,7 +22,7 @@ const upload = multer({
 });
 
 // Create a post (Only partners)
-router.post("/", auth(["partner"]), upload.array("media"), createPost);
+router.post("/", auth(), upload.array("media"), createPost);
 router.get("/", getAllPost);
 
 // Get a post by ID

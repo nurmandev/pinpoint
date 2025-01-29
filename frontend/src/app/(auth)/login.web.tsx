@@ -51,7 +51,7 @@ const Login = () => {
 
     try {
       setLoading(true);
-      await login(email, password, "partner");
+      await login(email.trim().toLowerCase(), password, "partner");
     } catch (error: any) {
       console.log(error);
       setError((prev) => ({

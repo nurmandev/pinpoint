@@ -63,7 +63,7 @@ const Login = () => {
     try {
       setLoading(true);
       await login(
-        email,
+        email.trim().toLowerCase(),
         password,
         currentTab === "User" ? "customer" : "partner"
       );
@@ -103,7 +103,7 @@ const Login = () => {
         </View>
         <Link
           style={[styles.forgetPassword, { color: colors.primary }]}
-          href={"/"}
+          href={"/forgotPassword"}
         >
           Forgot Password
         </Link>

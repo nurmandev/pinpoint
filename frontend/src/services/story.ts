@@ -28,7 +28,11 @@ export const createStory = async (storyData: StoryData) => {
             : `video_${index}.mp4`,
       });
     });
-    const response = await axiosInstance.post(`/stories`, formData);
+    const response = await axiosInstance.post(`/stories`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
     return response.data;
   } catch (error) {
     console.log("Error creating story:", error);

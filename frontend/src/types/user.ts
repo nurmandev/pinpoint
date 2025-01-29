@@ -32,4 +32,5 @@ export interface User {
   createedAt: Date;
   follower: User[];
   following: string[];
+  notification: any;
 }

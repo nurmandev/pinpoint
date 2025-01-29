@@ -41,7 +41,7 @@ const Login = () => {
     username: "",
     city: "",
     state: "",
-    role: UserRole.CUSTOMER,
+    role: UserRole.PARTNER,
     businessLegalName: "",
     businessAddress: "",
     suite: "",

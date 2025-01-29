@@ -83,6 +83,22 @@ export const requestForgotPasswordCodeSerrvice = async (email: string) => {
   }
 };
 
+export const verifyTokenSerrvice = async (email: string, code: string) => {
+  try {
+    const response = await axiosInstance.post("/auths/verify-token", {
+      email,
+      code,
+    });
+    return response.data;
+  } catch (error: any) {
+    throw new Error(
+      error?.response?.data?.errors ||
+        error.response?.data?.message ||
+        "Email verification failed"
+    );
+  }
+};
+
 // Verify Password Code (Reset Password)
 export const resetForgotPasswordCodeSerrvice = async (
   email: string,
@@ -92,7 +108,7 @@ export const resetForgotPasswordCodeSerrvice = async (
   try {
     const response = await axiosInstance.post("/auths/verify-password-code", {
       email,
-      code,
+      verificationCode: code,
       newPassword,
     });
     return response.data;

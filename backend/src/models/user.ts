@@ -22,6 +22,8 @@ interface UserBase extends Document {
   isVerified: boolean;
   follower: Schema.Types.ObjectId[];
   following: Schema.Types.ObjectId[];
+  delected: boolean;
+  notification: object;
 }
 
 // Customer-specific fields
@@ -86,6 +88,8 @@ const UserSchema = new Schema<UserBase | Customer | Partner>(
     products: [{ type: Schema.Types.ObjectId, ref: "Product" }],
     services: [{ type: Schema.Types.ObjectId, ref: "Service" }],
     locations: [{ type: Schema.Types.ObjectId, ref: "Location" }],
+    delected: { type: Boolean, default: false },
+    notification: { type: Object },
   },
   {
     timestamps: true,

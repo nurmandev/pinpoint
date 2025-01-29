@@ -80,6 +80,7 @@ export default function Root() {
                                     <Stack.Screen name="(auth)" />
                                     <Stack.Screen name="terms" />
                                     <Stack.Screen name="privacy" />
+                                    <Stack.Screen name="+not-found" />
                                   </Stack>
                                 </BottomSheetModalProvider>
                               </GestureHandlerRootView>

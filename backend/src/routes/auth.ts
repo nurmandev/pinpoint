@@ -6,6 +6,7 @@ import {
   resetForgotPasswordCode,
   sendVerificationCode,
   verifyEmail,
+  verifyForgotPasswordToken,
 } from "../controllers/auth";
 import { registerValidation } from "../utils/validations";
 
@@ -22,6 +23,7 @@ router.post("/login", login);
 router.post("/send-verification-code", sendVerificationCode);
 
 router.post("/forgot-password", requestForgotPasswordCode);
+router.post("/verify-token", verifyForgotPasswordToken);
 
 router.post("/verify-password-code", resetForgotPasswordCode);
 

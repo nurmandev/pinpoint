@@ -50,7 +50,7 @@ const Social = () => {
             title="Add Story"
           />
         </Menu>
-        <Appbar.Action icon="magnify" onPress={() => {}} />
+        <Appbar.Action icon="magnify" onPress={() => router.push("/search")} />
         <Appbar.Action
           icon="bell-outline"
           onPress={() => router.push("/notification")}

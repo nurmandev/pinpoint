@@ -1,25 +1,26 @@
 {
+  "cli": {
+    "version": ">= 14.4.1",
+    "appVersionSource": "remote"
+  },
   "build": {
-    "preview": {
-      "android": {
-        "buildType": "apk"
-      }
-    },
-    "preview2": {
-      "android": {
-        "gradleCommand": ":app:assembleRelease"
-      }
-    },
-    "preview3": {
-      "developmentClient": true
-    },
-    "preview4": {
-      "distribution": "internal"
-    },
     "development": {
       "developmentClient": true,
       "distribution": "internal"
     },
+    "preview": {
+      "distribution": "internal"
+    },
+    "preview2": {
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "production": {
+      "autoIncrement": true
+    }
+  },
+  "submit": {
     "production": {}
   }
 }

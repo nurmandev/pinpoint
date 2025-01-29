@@ -11,7 +11,6 @@ export const register = async (req: Request, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       res.status(400).json({ errors: errors.array() });
-
       return;
     }
 
@@ -30,7 +29,7 @@ export const register = async (req: Request, res: Response) => {
       firstName,
       lastName,
       username,
-      email,
+      email: userEmail,
       password,
       role,
       city,
@@ -38,6 +37,8 @@ export const register = async (req: Request, res: Response) => {
       ...otherFields
     } = filteredBody;
     console.log(req.body);
+
+    const email = userEmail.trim().toLowerCase();
 
     // Check if email is already in use
     const existingUserByEmail = await User.findOne({ email });
@@ -134,7 +135,7 @@ export const login = async (req: Request, res: Response) => {
   const { email, password, role } = req.body;
 
   try {
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email, delected: false });
 
     if (!user) {
       res.status(404).json({ message: "Invalid credentials" });
@@ -173,7 +174,7 @@ export const sendVerificationCode = async (req: Request, res: Response) => {
   const { email } = req.body;
 
   try {
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email, delected: false });
     if (!user) {
       res.status(404).json({ message: "User not found" });
       return;
@@ -241,6 +242,39 @@ export const requestForgotPasswordCode = async (
 
     res.status(200).json({ message: "Password reset code sent to your email" });
   } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Server Error", error });
+  }
+};
+
+export const verifyForgotPasswordToken = async (
+  req: Request,
+  res: Response
+) => {
+  const { email, code } = req.body;
+
+  try {
+    // Find the user with the matching email and non-deleted status
+    const user = await User.findOne({ email, delected: false });
+    if (!user) {
+      res.status(404).json({ message: "User not found" });
+      return;
+    }
+
+    // Check if the code matches and has not expired
+    if (
+      user.verificationCode !== code ||
+      !user.verificationCodeExpires ||
+      user.verificationCodeExpires < new Date()
+    ) {
+      res.status(400).json({ message: "Invalid or expired code" });
+      return;
+    }
+
+    // Code is valid; respond with success
+    res.status(200).json({ message: "Code verified successfully" });
+  } catch (error) {
+    console.log(error);
     res.status(500).json({ message: "Server Error", error });
   }
 };
@@ -266,7 +300,7 @@ export const resetForgotPasswordCode = async (req: Request, res: Response) => {
       res.status(400).json({ message: "Verification code has expired." });
       return;
     }
-
+    console.log(verificationCode, user.verificationCode);
     // Validate the verification code
     if (user.verificationCode !== verificationCode) {
       res.status(400).json({ message: "Invalid verification code." });

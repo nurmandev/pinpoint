@@ -6,6 +6,7 @@ import {
   updateLocation,
   deleteLocation,
   getNearbyLocations,
+  followLocation,
 } from "../controllers/location";
 import { auth } from "../middleware/auth";
 import multer from "multer";
@@ -23,6 +24,7 @@ const upload = multer({
 
 // Create a new location
 router.post("/", upload.array("media"), auth(), createLocation);
+router.post("/:locationId/follow", auth(), followLocation);
 
 // Get all locations
 router.get("/user", auth(), getUserAllLocations);

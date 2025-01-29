@@ -5,6 +5,8 @@ import { CustomRequest } from "../middleware/auth";
 import { deleteMediaFromS3, uploadMediaToS3 } from "../utils/media";
 import Service from "../models/service";
 import Product from "../models/product";
+import mongoose, { ObjectId } from "mongoose";
+import User from "../models/user";
 
 // Create a new Location
 export const createLocation = async (req: CustomRequest, res: Response) => {
@@ -314,5 +316,71 @@ export const deleteLocation = async (req: CustomRequest, res: Response) => {
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Internal server error", error });
+  }
+};
+
+export const followLocation = async (req: CustomRequest, res: Response) => {
+  const { locationId } = req.params;
+  const userId = req.user!._id;
+
+  if (!mongoose.Types.ObjectId.isValid(locationId)) {
+    res.status(400).json({ error: "Invalid location ID." });
+    return;
+  }
+
+  try {
+    const location = await Location.findById(locationId);
+    if (!location) {
+      res.status(404).json({ error: "Location not found." });
+      return;
+    }
+
+    const user: any = await User.findById(userId);
+
+    if (!user) {
+      res.status(404).json({ error: "User not found." });
+      return;
+    }
+
+    const isFollowing = location.followers.includes(
+      userId as unknown as ObjectId
+    );
+
+    if (isFollowing) {
+      // Unfollow: Remove the user from followers
+      location.followers = location.followers.filter(
+        (followerId) => followerId !== (userId as unknown as ObjectId)
+      );
+      user.followingStores = user.followingStores.filter(
+        (followerId: any) => followerId !== location._id
+      );
+
+      await location.save();
+      await user.save();
+
+      res.status(200).json({
+        message: "Successfully unfollowed the location.",
+        locationId,
+        followerCount: location.followers.length,
+      });
+    } else {
+      // Follow: Add the user to followers
+      location.followers.push(userId as unknown as ObjectId);
+      user.followingStores.push(location._id);
+
+      await location.save();
+      await user.save();
+
+      res.status(200).json({
+        message: "Successfully followed the location.",
+        locationId,
+        followerCount: location.followers.length,
+      });
+    }
+  } catch (error) {
+    console.error("Error following location:", error);
+    res
+      .status(500)
+      .json({ error: "An error occurred while following the location." });
   }
 };

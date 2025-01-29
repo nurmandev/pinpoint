@@ -23,6 +23,7 @@ import { ResizeMode, Video } from "expo-av";
 import { useUser } from "@/src/context/User";
 import { UserRole } from "@/src/types/user";
 import useDimensions from "@/src/hooks/useDimension";
+import { useToastNotification } from "@/src/context/ToastNotificationContext";
 
 const WIDTH = Dimensions.get("screen").width;
 const HEIGHT = Dimensions.get("screen").height;
@@ -30,6 +31,7 @@ const HEIGHT = Dimensions.get("screen").height;
 const AddPost: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const { createNewPost } = usePost();
   const { user } = useUser();
+  const { addNotification } = useToastNotification();
   const { loadUserLocations, locations } = useLocation();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [images, setImages] = useState<ImagePicker.ImagePickerAsset[]>([]);
@@ -92,12 +94,13 @@ const AddPost: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   };
 
   const handlePost = async () => {
-    if (!selectedLocation || (!description && images.length < 1)) return;
+    if (user?.role === "partner" && !selectedLocation) return;
     const postData = {
       content: description,
       media: images.map((image) => ({
         url: image.uri,
         name: image.fileName as string,
+        type: image.mimeType,
       })),
       location: selectedLocation,
     };
@@ -106,7 +109,8 @@ const AddPost: React.FC<{ onClose: () => void }> = ({ onClose }) => {
       setCreatingPost(true);
       await createNewPost(postData);
       router.back();
-    } catch (error) {
+    } catch (error: any) {
+      addNotification({ message: error.message, error: true });
       console.log(error);
     } finally {
       setCreatingPost(false);
@@ -209,7 +213,7 @@ const AddPost: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             loading={creatingPost}
             disabled={
               creatingPost ||
-              !selectedLocation ||
+              (user?.role === "partner" && !selectedLocation) ||
               (!description && images.length < 1)
             }
           >

@@ -15,8 +15,9 @@ const notification = () => {
         )}
         <Appbar.Content title="Notifications" />
       </Appbar.Header>
+      <Text style={{ padding: 20 }}>No notification available</Text>
       <FlatList
-        data={["1", "2", "3", "4", "5"]}
+        data={[]}
         renderItem={() => (
           <View style={styles.item}>
             <Image

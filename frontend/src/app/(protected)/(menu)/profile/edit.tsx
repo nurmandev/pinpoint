@@ -7,7 +7,7 @@ import {
   Dimensions,
   TouchableOpacity,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Entypo,
   Feather,
@@ -33,10 +33,11 @@ const Edit = () => {
   const { addNotification } = useToastNotification();
   const [password, setPassword] = useState("");
   const [image, setImage] = useState<(File & { uri: string }) | null>(null);
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [state, setState] = useState("");
-  const [city, setCity] = useState("");
+  const [firstName, setFirstName] = useState(user?.firstName);
+  const [lastName, setLastName] = useState(user?.lastName);
+  const [state, setState] = useState(user?.state);
+  const [cities, setCities] = useState<string[] | undefined>([]);
+  const [city, setCity] = useState(user?.city);
   const [loading, setLoading] = useState(false);
 
   const handleMediaUpload = async () => {
@@ -72,9 +73,15 @@ const Edit = () => {
     }
   };
 
-  const cities = state
-    ? states.find((stat) => stat.name === state)?.cities
-    : [];
+  useEffect(() => {
+    if (!state) return;
+    const cities = state
+      ? states.find((stat) => stat.name.toLowerCase() === state.toLowerCase())
+          ?.cities
+      : [];
+    console.log(state, cities);
+    setCities(cities);
+  }, [state]);
   return (
     <View style={{ flex: 1 }}>
       <Appbar.Header

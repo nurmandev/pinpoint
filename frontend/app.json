@@ -1,23 +1,15 @@
 {
   "expo": {
-    "name": "pinpoint",
-    "slug": "pinpoint",
+    "name": "pinpoint_v2",
+    "slug": "pinpoint_v2",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
-    "splash": {
-      "image": "./assets/images/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
+    "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true,
-      "config": {
-        "googleMapsApiKey": "AIzaSyBAG6Xy390W6KIWFx3DFQAtIDVnW3gqCFQ"
-      },
-      "bundleIdentifier": "com.emirace.pinpoint"
+      "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
@@ -26,14 +18,11 @@
       },
       "permissions": [
         "android.permission.CAMERA",
-        "android.permission.RECORD_AUDIO"
+        "android.permission.RECORD_AUDIO",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
       ],
-      "package": "com.emirace.pinpoint",
-      "config": {
-        "googleMaps": {
-          "apiKey": "AIzaSyBAG6Xy390W6KIWFx3DFQAtIDVnW3gqCFQ"
-        }
-      }
+      "package": "com.emirace.pinpoint_v2"
     },
     "web": {
       "bundler": "metro",
@@ -42,6 +31,15 @@
     },
     "plugins": [
       "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#ffffff"
+        }
+      ],
       [
         "expo-camera",
         {
@@ -66,7 +64,7 @@
         "origin": false
       },
       "eas": {
-        "projectId": "fb1cc197-9093-440b-b6df-638081b7e7f0"
+        "projectId": "1b9b84ea-41d2-4881-abbc-83ead2caccd6"
       }
     }
   }
